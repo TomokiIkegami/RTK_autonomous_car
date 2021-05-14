@@ -105,11 +105,19 @@ int hensa = 0;
 void Steering_pid(double sita){
 int ii = 0;
 int hang_ang;
+<<<<<<< HEAD
+double angle_num = 90; //舵角を12 から，35に変更
+
+  if( sita/(PI/angle_num)*17 >= 17 ) hang_ang = -17;
+  else if( sita/(PI/angle_num)*17<= -17 ) hang_ang = 17;
+  else hang_ang = (int)( -sita/(PI/angle_num)*17 );
+=======
 double angle_num = 35.0; //舵角を12deg から，35degに変更
 
   if( sita/(PI/angle_num)*17.5 >= 17.5 ) hang_ang = -17.5;
   else if( sita/(PI/angle_num)*17.5 <= -17.5 ) hang_ang = 17.5;
   else hang_ang = (int)( -sita/(PI/angle_num)*17.5 );
+>>>>>>> 85792274c96efcae57454724d576e6035174f90f
 
   while(1){
    if( enc_countA < hang_ang){
@@ -146,7 +154,11 @@ double angle_num = 35.0; //舵角を12deg から，35degに変更
   }        
 } 
 
+<<<<<<< HEAD
+int dest = 18;//ロータリーエンコーダとギヤ取り付け部がソフトなのでずれるが７にする 8から18に変更
+=======
 int dest = 17.5;//ロータリーエンコーダとギヤ取り付け部がソフトなのでずれるが７にする 8から17.5に変更
+>>>>>>> 85792274c96efcae57454724d576e6035174f90f
 void setup() {
   Serial.begin(115200);// arduino IDEモニタ用
   while (!Serial); 
@@ -273,8 +285,13 @@ void setup() {
   }
   
   // 後輪駆動モータ回転　前進します
+<<<<<<< HEAD
+  digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY2,0);
+=======
   //digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
   //digitalWrite(RELAY2,0);
+>>>>>>> 85792274c96efcae57454724d576e6035174f90f
   delay(400);
 }
 
@@ -295,7 +312,11 @@ void loop() {
 //  delay(100); 
 
   sita = rd_north - rd;
+<<<<<<< HEAD
+  if( sita < -PI ) sita = sita + 2*PI; //atanの計算をするときの値が-π~πなるように
+=======
   if( sita < -PI ) sita = sita + 2*PI;
+>>>>>>> 85792274c96efcae57454724d576e6035174f90f
   else if( sita > PI ) sita = sita - 2*PI;
 
   ////////////////////////
