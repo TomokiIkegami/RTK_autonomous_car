@@ -106,8 +106,8 @@ void Steering_pid(double sita){
 int ii = 0;
 int hang_ang;
 
-double angle_num = 6; //舵角を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる
-double DR=17; //DR:Dual Rate ，舵角のこと
+double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
+double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
 
   if( sita/(PI/angle_num)*DR >= DR ) hang_ang = -DR;
   else if( sita/(PI/angle_num)*DR<= -DR ) hang_ang = DR;
