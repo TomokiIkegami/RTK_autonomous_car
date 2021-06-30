@@ -16,9 +16,16 @@ while True:
             if c == b'A':
                 print(c)
                 break
+    d=33
+    #hex_d=hex(d)
+    #print(hex_d)
+    bina_d=bytes([d])
 
-    ser.write(b'B') # 'A' == 0x41
+    ser.write(bina_d) # 'A' == 0x41
     #print("arduinoにBを送りました2021.5.17")   
     time.sleep(0.1)
     c = ser.read()
-    print(c)
+    print("byte型:{0}".format(c))
+    
+    xx=int.from_bytes(c, 'big')
+    print('byte→int:{0}'.format(xx))
