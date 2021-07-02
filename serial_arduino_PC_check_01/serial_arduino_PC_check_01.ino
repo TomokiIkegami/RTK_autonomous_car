@@ -11,24 +11,47 @@ void setup() {
 
 
 void loop() {
+
+  byte cc;
+  
   while(1){
     if(Serial.available()>0){
-      byte cc = (byte)Serial.read();
+      cc = (byte)Serial.read();
       //int cc = Serial.read();
-      if(cc == 'A'){ // 0x41 == 'A'
+      if(cc == '-'){ // 0x41 == 'A'
         //Serial.print(cc);   
         Serial.write(cc);
         break;
-      }
+      }else{
+        Serial.write('+');
+        break;
+        }
     }
   }
+
+  
     //delay(1000);
   while(1){
     if(Serial.available()>0){
-      byte cc = (byte)Serial.read();
-      //if(cc == 'B'){ 
-        Serial.write(cc);   
+      byte dd = (byte)Serial.read();
+      if(cc == '-'){
+        delay(1000);
+        Serial.write('X');
+        //byte dd = (byte)Serial.read();
+        //Serial.write(dd);
         break;
+        
+        }else{
+        Serial.write(dd);
+        break;
+          }
+
+      //Serial.write(dd);
+      //break;
+      
+      //if(cc == 'B'){ 
+        //Serial.write(cc);   
+        //break;
       //}
     }
   }
