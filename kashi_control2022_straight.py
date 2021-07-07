@@ -122,36 +122,53 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             #print("arduinoにAを送るよ2021.5.17") 
             if(currenttime-starttime > 1.0):	#　2秒毎にシリアル通信
                 starttime=currenttime
-                #print("arduinoまできた2021.5.17") 
-                while True:
-                    ser.write(b'A') # 'A' == 0x41
-                    #print("arduinoにAを送りました2021.5.17")   
-                    time.sleep(0.1)
-                    c = ser.read()
-                    if c == b'A':
-                        print(c)
-                        break
+                #print("arduinoまできた2021.5.17")
+                # 
+                # while True:
+                #     ser.write(b'A') # 'A' == 0x41
+                #     #print("arduinoにAを送りました2021.5.17")   
+                #     time.sleep(0.1)
+                #     c = ser.read()
+                #     if c == b'A':
+                #         print(c)
+                #         break
 
-                if(limit_d <= 0.1):ser.write(b"s") #　停止
-                elif(d <= -0.8):ser.write(b"0")    #　右折 
-                elif(-0.8 < d <= -0.6):ser.write(b"1")  #  右折する
-                elif(-0.6 < d <= -0.4):ser.write(b"2")  #  右折する
-                elif(-0.4 < d <= -0.2):ser.write(b"3")  #  右折する
-                elif(-0.2 < d <= -0.1):ser.write(b"4")  #  右折する
-                elif(-0.1 < d < 0.1):ser.write(b"5")	#　ハンドル真っ直ぐ
-                elif(0.1 <= d < 0.2):ser.write(b"6")    #  左折する
-                elif(0.2 <= d < 0.4):ser.write(b"7")    #  左折する
-                elif(0.4 <= d < 0.6):ser.write(b"8")    #  左折する
-                elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
-                elif(0.8 <= d):ser.write(b"a")        #  左折する
+                # if(limit_d <= 0.1):ser.write(b"s") #　停止
+                # elif(d <= -0.8):ser.write(b"0")    #　右折 
+                # elif(-0.8 < d <= -0.6):ser.write(b"1")  #  右折する
+                # elif(-0.6 < d <= -0.4):ser.write(b"2")  #  右折する
+                # elif(-0.4 < d <= -0.2):ser.write(b"3")  #  右折する
+                # elif(-0.2 < d <= -0.1):ser.write(b"4")  #  右折する
+                # elif(-0.1 < d < 0.1):ser.write(b"5")	#　ハンドル真っ直ぐ
+                # elif(0.1 <= d < 0.2):ser.write(b"6")    #  左折する
+                # elif(0.2 <= d < 0.4):ser.write(b"7")    #  左折する
+                # elif(0.4 <= d < 0.6):ser.write(b"8")    #  左折する
+                # elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
+                # elif(0.8 <= d):ser.write(b"a")        #  左折する
+
+                d=d*100 #ずれ量を[m]から[cm]に変換
+
+                if d<0:
+                    d=256-abs(d)
+
+                bina_d=bytes([d])
+
+                ser.write(bina_d)
+                time.sleep(0.1)
+                c = ser.read()
+                
+
+
                 
         else:
             print("float")	#　Fix解以外をまとめてFloat解とする
             continue
- 
-        c = ser.read()
-        if( c==b'0' or c==b'1' or c==b'2' or c==b'3' or c==b'4' or c==b'5' or c==b'6' or c==b'7' or c==b'8' or c==b'9' or c==b'a' or c==b's'):
-            print(c) 
-            print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+
+        
+        #if( c==b'0' or c==b'1' or c==b'2' or c==b'3' or c==b'4' or c==b'5' or c==b'6' or c==b'7' or c==b'8' or c==b'9' or c==b'a' or c==b's'):
+        
+        xx.int.from_bytes(c,'big')
+        print(xx) #表示される値は符号なし 
+        print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[cm]") # 緯度経度出力
 
 

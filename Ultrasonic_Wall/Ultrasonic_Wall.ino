@@ -417,7 +417,22 @@ void Ultrasonic(void){
   // 方位 radian
   sita = atan( (Distance_1 - Distance_2) / LL );
   // 基準位置からの距離 [m] 
-  delta_l = (Distance_1 + Distance_2)/2.0/100.0 - Distance_c;// [m]にした  
+  //delta_l = (Distance_1 + Distance_2)/2.0/100.0 - Distance_c;// [m]にした  
+
+  //PCからずれ量を取得
+  /**次回はこの続きから**/
+
+  while(1){
+    if(Serial.available()>0){
+      byte cc=(byte)Serial.read();
+      char real_d=(char)cc;
+
+      
+      }
+    
+    }
+
+  
 }
 
 // モーターへの電流を止める
