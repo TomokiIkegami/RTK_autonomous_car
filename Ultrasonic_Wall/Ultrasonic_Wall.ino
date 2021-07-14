@@ -172,7 +172,7 @@ double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
 
 int dest = 17;//ロータリーエンコーダとギヤ取り付け部がソフトなのでずれるが７にする 8から17.5に変更
 double sita;
-double delta_l;
+char delta_l;
 
 
 
@@ -383,8 +383,8 @@ void loop() {
   Ultrasonic();
   ////////////////////////
   // 前輪操舵制御 //
-  ////////////////////////  
-  int stop_f = Feed_Back(sita, delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
+  ////////////////////////
+  int stop_f = Feed_Back(sita, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
   if(stop_f == 1) exit(0);
   delay(300); 
 }
@@ -450,7 +450,7 @@ void Ultrasonic(void){
   while(1){
     if(Serial.available()>0){
       byte cc=(byte)Serial.read();
-      char delta_l=(char)cc; //経路からのずれ量[cm]
+      delta_l=(char)cc; //経路からのずれ量[cm]
       break;
       }
     

@@ -120,7 +120,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
             currenttime=time.time()
             #print("arduinoにAを送るよ2021.5.17") 
-            if(currenttime-starttime > 1.0):	#　2秒毎にシリアル通信
+            if(currenttime-starttime > 2.0):	#　2秒毎にシリアル通信
                 starttime=currenttime
                 #print("arduinoまできた2021.5.17")
                 # 
@@ -146,18 +146,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                 # elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
                 # elif(0.8 <= d):ser.write(b"a")        #  左折する
 
-                d=d*100 #ずれ量を[m]から[cm]に変換
+                d_cm=d*100 #ずれ量を[m]から[cm]に変換
+                d_int=int(d_cm)
+                if d_int<0:
+                    d_int=256-abs(d_int)
 
-                if d<0:
-                    d=256-abs(d)
-
-                bina_d=bytes([d])
+                bina_d=bytes([d_int])
 
                 ser.write(bina_d)
                 time.sleep(0.1)
                 c = ser.read()
                 
-
 
                 
         else:
@@ -167,8 +166,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
         
         #if( c==b'0' or c==b'1' or c==b'2' or c==b'3' or c==b'4' or c==b'5' or c==b'6' or c==b'7' or c==b'8' or c==b'9' or c==b'a' or c==b's'):
         
-        xx.int.from_bytes(c,'big')
-        print(xx) #表示される値は符号なし 
-        print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[cm]") # 緯度経度出力
+        #xx.int.from_bytes(c,'big')
+        #print(xx) #表示される値は符号なし 
+        print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
 
 
