@@ -309,7 +309,7 @@ void setup() {
   }  
 
   // 後輪駆動モータ回転　前進します
-  digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,0);
 
   delay(400);
