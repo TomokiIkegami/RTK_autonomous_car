@@ -204,6 +204,14 @@ void setup() {
   // stepper.step(steps)で設定したsteps数をこの回転速度で回るのです
   // steps=10 ならば１０ステップをこの回転速度で回るのです 
 
+  //Wire(Arduino-I2C)の初期化
+  Wire.begin();
+
+  //BMX055 初期化
+  BMX055_Init();
+  delay(300);
+
+
  // 超音波センサ用端子 Timer3(16bit timer) -> pwm 5,3,2 
   pinMode(trig1,OUTPUT);
   pinMode(echo1,INPUT);
