@@ -268,32 +268,32 @@ void setup() {
       myStepper.step(User_steps);  // User_stepsだけ回す
       v_angle = v_angle + 10.0;
       // 電子コンパスのデータ取得
-      //count++; 
-      //compass_Rawdata();
+      count++; 
+      compass_Rawdata();
       if(v_angle >= 360.0) rot_dir=1;   
     }
     else if(rot_dir == 1){// rot_dir=1 は上から見て時計回り
       myStepper.step(-1*User_steps);  // -1*User_stepsだけ回す
       v_angle = v_angle - 10.0; 
       // 電子コンパスのデータ取得
-      //count++; 
-      //compass_Rawdata(); 
+      count++; 
+      compass_Rawdata(); 
       if(v_angle <= 0.0) rot_dir=4; 
     } 
     else if(rot_dir == 2){
       myStepper.step(User_steps);  // User_stepsだけ回す
       v_angle = v_angle + 10.0;
       // 電子コンパスのデータ取得
-      //count++; 
-      //compass_Rawdata();
+      count++; 
+      compass_Rawdata();
       if(v_angle >= 360.0) rot_dir=3;   
     }
     else if(rot_dir == 3){
       myStepper.step(-1*User_steps);  // -1*User_stepsだけ回す
       v_angle = v_angle - 10.0; 
       // 電子コンパスのデータ取得
-      //count++; 
-      //compass_Rawdata(); 
+      count++; 
+      compass_Rawdata(); 
       if(v_angle <= 0.0) rot_dir=4; 
     } 
     else if(rot_dir == 4){
@@ -330,7 +330,7 @@ int Feed_Back(double delta_rad, double delta_m){
   
 // delta_rad [rad]です。  delta_m [m]です。
 float k[3];     //フィードバックゲイン
-delta_m=1; //ずれ量を固定（テスト用）
+//delta_m=1; //ずれ量を固定（テスト用）
 
 
 double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
@@ -454,10 +454,7 @@ void Ultrasonic(void){
   //delta_l = (Distance_1 + Distance_2)/2.0/100.0 - Distance_c;// [m]にした  
 
   //PCからずれ量を取得
-
-
-
-
+  
   while(1){
     if(Serial.available()>0){
       byte cc=(byte)Serial.read();
@@ -467,8 +464,8 @@ void Ultrasonic(void){
     
     }
 
-  
 }
+
 
 /*磁気コンパス関連の関数*/
 
