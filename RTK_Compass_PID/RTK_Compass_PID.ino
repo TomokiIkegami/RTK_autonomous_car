@@ -330,8 +330,8 @@ int Feed_Back(double delta_rad, double delta_m){
   
 // delta_rad [rad]です。  delta_m [m]です。
 float k[3];     //フィードバックゲイン
-//delta_m=1; //ずれ量を固定（テスト用）
-
+//delta_m=0; //ずれ量を固定（テスト用）
+delta_rad=0; //角度を固定
 
 double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
 double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
