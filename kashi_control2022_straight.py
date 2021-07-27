@@ -9,19 +9,19 @@ import math		# 数学関係モジュール
 import serial		# シリアル通信用モジュール
 import time     # 時間関数用モジュール 
 
-####### 出発点と目的地(学校→療育センター)　########################################
-# isStartNorth = 43.812389700  # 出発点　北緯　ddd.ddddd表記です
-# isStartEast = 142.352324100  # 出発点　東経　ddd.ddddd表記です
-# isDestiNorth = 43.812274230  # 目的地　北緯　ddd.ddddd表記です
-# isDestiEast = 142.352165560  # 目的地　東経　ddd.ddddd表記です
-###############################################################
+###### 出発点と目的地(学校→療育センター)　########################################
+isStartNorth = 43.812389700  # 出発点　北緯　ddd.ddddd表記です
+isStartEast = 142.352324100  # 出発点　東経　ddd.ddddd表記です
+isDestiNorth = 43.812274230  # 目的地　北緯　ddd.ddddd表記です
+isDestiEast = 142.352165560  # 目的地　東経　ddd.ddddd表記です
+##############################################################
 
-####### 出発点と目的地(療育センター→学校)　########################################
-isStartNorth = 43.812274230 # 出発点　北緯　ddd.ddddd表記です
-isStartEast = 142.352165560 # 出発点　東経　ddd.ddddd表記です
-isDestiNorth = 43.812389700  # 目的地　北緯　ddd.ddddd表記です
-isDestiEast = 142.352324100  # 目的地　東経　ddd.ddddd表記です
-###############################################################
+# ####### 出発点と目的地(療育センター→学校)　########################################
+# isStartNorth = 43.812274230 # 出発点　北緯　ddd.ddddd表記です
+# isStartEast = 142.352165560 # 出発点　東経　ddd.ddddd表記です
+# isDestiNorth = 43.812389700  # 目的地　北緯　ddd.ddddd表記です
+# isDestiEast = 142.352324100  # 目的地　東経　ddd.ddddd表記です
+# ###############################################################
 
 
 def check_fix():    # fixしているか確認
@@ -111,6 +111,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
     course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
     a=course[0];b=course[1];c=course[2]		# ax+by+c=0
 
+    time.sleep(35)
     starttime=time.time()
     			
     while True:
@@ -127,8 +128,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             edge=get_edge(LAT_s,LNG_s,LAT,LNG)	# 出発地と現在地の距離を取得
             limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
             currenttime=time.time()
+            
+
             #print("arduinoにAを送るよ2021.5.17") 
-            if(currenttime-starttime > 2.0):	#　2秒毎にシリアル通信
+            if(currenttime-starttime > 3.0):	#　2秒毎にシリアル通信
                 starttime=currenttime
                 #print("arduinoまできた2021.5.17")
                 # 
@@ -171,6 +174,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                 ser.write(bina_d)
                 time.sleep(0.1)
                 c = ser.read()
+
+                print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
                 
 
                 
@@ -183,6 +188,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
         
         #xx.int.from_bytes(c,'big')
         #print(xx) #表示される値は符号なし 
-        print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+        #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
 
 

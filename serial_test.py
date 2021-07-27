@@ -3,7 +3,7 @@ import math		# 数学関係モジュール
 import serial		# シリアル通信用モジュール
 import time     # 時間関数用モジュール 
 
-ser = serial.Serial('COM6',115200,timeout = 0.1)	# シリアル通信開始
+ser = serial.Serial('COM25',115200,timeout = 0.1)	# シリアル通信開始
 
 
 while True:
@@ -19,7 +19,7 @@ while True:
 
     
 
-    d=-128 #ずれ量の値
+    d=-1 #ずれ量の値
 
     #ずれ量が負の場合は，符号なしの値に変換
     if d<0: 

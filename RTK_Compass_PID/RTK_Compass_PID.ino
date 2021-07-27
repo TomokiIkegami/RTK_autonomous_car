@@ -172,7 +172,7 @@ double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
 
 int dest = 17;//ロータリーエンコーダとギヤ取り付け部がソフトなのでずれるが７にする 8から17.5に変更
 double sita;
-char delta_l;
+int delta_l;
 
 
 
@@ -181,6 +181,8 @@ char delta_l;
 void setup() {
   Serial.begin(115200);// arduino IDEモニタ用
   while (!Serial); 
+  Serial3.begin(115200);// arduino TeraTermモニタ用
+  
   Serial.println("プログラム開始");
 
   // RELAY Setting //
@@ -317,8 +319,8 @@ void setup() {
   }  
 
   // 後輪駆動モータ回転　前進します
-  digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2,0);
+  //digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
+  //digitalWrite(RELAY2,0);
 
   delay(400);
 }
@@ -331,10 +333,10 @@ int Feed_Back(double delta_rad, double delta_m){
 // delta_rad [rad]です。  delta_m [m]です。
 float k[3];     //フィードバックゲイン
 //delta_m=0; //ずれ量を固定（テスト用）
-delta_rad=0; //角度を固定
+//delta_rad=0; //角度を固定
 
 double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
-double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
+double DR=15; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
  
    /////////////////////////////////////////////////////
   // 比例・積分制御                                   //
@@ -344,8 +346,8 @@ double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
   double hen_rad = delta_rad/(PI/angle_num)*DR;
 
   //k[0] = 1.0;// 進行方向の角度のゲイン
-  k[0] = 1.0;// 進行方向の角度のゲイン (初めは2.0)
-  k[1] = 50.0;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
+  k[0] = 2.0;// 進行方向の角度のゲイン (初めは2.0)
+  k[1] =100;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
   //k[1] = 0.0;
   k[2] = 0.00;  // ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）の積分のゲイン
  
@@ -385,7 +387,7 @@ double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
       Serial.print("3:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
       //ii = 0;
     } 
-  } 
+  }
   return (0);     
 }
 
@@ -396,6 +398,14 @@ void loop() {
   // 前輪操舵制御 //
   ////////////////////////
   int stop_f = Feed_Back(sita, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
+  /*距離を受信したら走行開始*/
+  digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY2,0);
+  delay(1000);
+  /*一定時間走行したら停止*/
+  digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY2,1);
+  
   if(stop_f == 1) exit(0);
   delay(300); 
 }
@@ -459,6 +469,7 @@ void Ultrasonic(void){
     if(Serial.available()>0){
       byte cc=(byte)Serial.read();
       delta_l=(char)cc; //経路からのずれ量[cm]
+      //Serial3.println(delta_l);
       break;
       }
     
