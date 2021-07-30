@@ -111,7 +111,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
     course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
     a=course[0];b=course[1];c=course[2]		# ax+by+c=0
 
-    time.sleep(35)
+    #time.sleep(35)
     starttime=time.time()
     			
     while True:
@@ -124,6 +124,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
         FF=int(codelist[6])		# fixかfloatか : fixは 4, floatは 5を判断
 
         if FF==4:				# fixは 4, floatは 5を判断
+
+            if(limit_d <= 0.1):
+                time.sleep(10)
+
             d=get_d(a,b,c,LAT,LNG,LAT_s,LNG_s)	# 経路からのずれの量[m]を取得
             edge=get_edge(LAT_s,LNG_s,LAT,LNG)	# 出発地と現在地の距離を取得
             limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
@@ -131,7 +135,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             
 
             #print("arduinoにAを送るよ2021.5.17") 
-            if(currenttime-starttime > 3.0):	#　2秒毎にシリアル通信
+            if(currenttime-starttime > 0.5):	#　2秒毎にシリアル通信 走行用の周期は3秒
                 starttime=currenttime
                 #print("arduinoまできた2021.5.17")
                 # 
@@ -175,7 +179,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                 time.sleep(0.1)
                 c = ser.read()
 
-                print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+                #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+                print(LAT,LNG,sep=",")
                 
 
                 
