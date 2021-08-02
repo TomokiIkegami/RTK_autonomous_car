@@ -8,13 +8,14 @@ import socket		# ソケット通信用モジュール
 import math		# 数学関係モジュール 
 import serial		# シリアル通信用モジュール
 import time     # 時間関数用モジュール 
+import re       #北緯と東経を分離するために使用
 
-###### 出発点と目的地(学校→療育センター)　########################################
-isStartNorth = 43.812389700  # 出発点　北緯　ddd.ddddd表記です
-isStartEast = 142.352324100  # 出発点　東経　ddd.ddddd表記です
-isDestiNorth = 43.812274230  # 目的地　北緯　ddd.ddddd表記です
-isDestiEast = 142.352165560  # 目的地　東経　ddd.ddddd表記です
-##############################################################
+# ###### 出発点と目的地(学校→療育センター)　########################################
+# isStartNorth = 43.812389700  # 出発点　北緯　ddd.ddddd表記です
+# isStartEast = 142.352324100  # 出発点　東経　ddd.ddddd表記です
+# isDestiNorth = 43.812274230  # 目的地　北緯　ddd.ddddd表記です
+# isDestiEast = 142.352165560  # 目的地　東経　ddd.ddddd表記です
+# ##############################################################
 
 # ###### 出発点と目的地(療育センター→学校)　########################################
 # isStartNorth = 43.812274230 # 出発点　北緯　ddd.ddddd表記です
@@ -22,6 +23,25 @@ isDestiEast = 142.352165560  # 目的地　東経　ddd.ddddd表記です
 # isDestiNorth = 43.812389700  # 目的地　北緯　ddd.ddddd表記です
 # isDestiEast = 142.352324100  # 目的地　東経　ddd.ddddd表記です
 # ###############################################################
+
+###### --左折用-- 出発点と目的地(スタート→中間点)　########################################
+isStartNorth = 43.81238459  # 出発点　北緯　ddd.ddddd表記です
+isStartEast = 142.3523173  # 出発点　東経　ddd.ddddd表記です
+isDestiNorth = 43.81227941  # 目的地　北緯　ddd.ddddd表記です
+isDestiEast = 142.3521691  # 目的地　東経　ddd.ddddd表記です
+##############################################################
+
+###### --左折用(カンマ区切り版)-- 出発点と目的地(スタート→中間点)　########################################
+Start = '43.81238459,142.3523173'
+Desti = '43.81227941,142.3521691' 
+
+pattern="(.*),(.*)"
+Start_NE=re.search(pattern, Start)
+Desti_NE=re.search(pattern, Desti)
+print("スタート{0},{1}".format(Start_NE.group(1),Start_NE.group(2)))
+print("中間点{0},{1}".format(Desti_NE.group(1),Desti_NE.group(2)))
+
+##############################################################
 
 
 def check_fix():    # fixしているか確認
@@ -105,13 +125,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
     print("計測開始")
     print("出発点から動きます")
     
-    LAT_s=isStartNorth; LNG_s=isStartEast # 出発点
-    LAT_f=isDestiNorth; LNG_f=isDestiEast # 目的地
+    # LAT_s=isStartNorth; LNG_s=isStartEast # 出発点
+    # LAT_f=isDestiNorth; LNG_f=isDestiEast # 目的地
+
+    LAT_s= float(Start_NE.group(1)); LNG_s= float(Start_NE.group(2)) # 出発点
+    LAT_f=float(Desti_NE.group(1)); LNG_f= float(Desti_NE.group(2)) # 目的地
 
     course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
     a=course[0];b=course[1];c=course[2]		# ax+by+c=0
 
-    #time.sleep(35)
+    time.sleep(35)
     starttime=time.time()
     			
     while True:
@@ -128,6 +151,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             if(limit_d <= 0.1):
                 time.sleep(10)
 
+
             d=get_d(a,b,c,LAT,LNG,LAT_s,LNG_s)	# 経路からのずれの量[m]を取得
             edge=get_edge(LAT_s,LNG_s,LAT,LNG)	# 出発地と現在地の距離を取得
             limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
@@ -135,7 +159,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             
 
             #print("arduinoにAを送るよ2021.5.17") 
-            if(currenttime-starttime > 0.5):	#　2秒毎にシリアル通信 走行用の周期は3秒
+            if(currenttime-starttime > 3.0):	#　2秒毎にシリアル通信 走行用の周期は3秒
                 starttime=currenttime
                 #print("arduinoまできた2021.5.17")
                 # 
