@@ -33,8 +33,8 @@ import re       #北緯と東経を分離するために使用
 
 ###### --左折用(カンマ区切り版)-- 出発点と目的地(スタート→中間点)　########################################
 Start = '43.81238459,142.3523173'
-Mid1 = '43.81228830633333,142.35218217533335' 
-Desti='43.8122256998889,142.35217902061112'
+Mid1 = '43.81227941,142.3521691' 
+Desti='43.81226123,142.3521671'
 
 pattern="(.*),(.*)"
 Start_NE=re.search(pattern, Start)
@@ -138,111 +138,111 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
     course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
     a=course[0];b=course[1];c=course[2]		# ax+by+c=0
 
-    time.sleep(35)
+    #time.sleep(35)
     starttime=time.time()
 
     flag=0
     i=0
-    while True:
-        print("経路の変更回数:",i,sep='')
-        i=i+1
-
-        if flag==1:
-            LAT_s=LAT_f; LNG_s=LNG_f; #中間点をスタートに設定
-            LAT_f=float(Desti_NE.group(1)); LNG_f= float(Desti_NE.group(2)) # ゴールの座標を設定
-            course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
-            a=course[0];b=course[1];c=course[2]		# ax+by+c=0
-            print('中間点とゴールの座標と数式係数を取得しました．')
-            flag=0
-            limit_d=20
-
-        j=0
-        while True:
-            print("内側ループ:",j,sep='')
-            j=j+1
-            codelist=get_codelist()
-            Time=round((float(codelist[1])/10000+9),4)	# 日本時間
-            NS=codelist[3]			#  北緯南緯
-            LAT=min_deg(float(codelist[2]))	#　緯度の単位を度に変換
-            EW=codelist[5]			# 東経西経
-            LNG=min_deg(float(codelist[4]))	# 経度の単位を度に変換
-            FF=int(codelist[6])		# fixかfloatか : fixは 4, floatは 5を判断
-            
-
-            if FF==4:				# fixは 4, floatは 5を判断
-
-                if limit_d <= 0.4:
-                    time.sleep(10)
-                    print("ストップ")
-                    flag=1
-                    break
 
 
-                d=get_d(a,b,c,LAT,LNG,LAT_s,LNG_s)	# 経路からのずれの量[m]を取得
-                edge=get_edge(LAT_s,LNG_s,LAT,LNG)	# 出発地と現在地の距離を取得
-                limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
-                currenttime=time.time()
-                print("limit_d={0}".format(limit_d))
+    j=0
+    N=0
+    LAT_total=0
+    LNG_total=0
+    while N<30:
 
-                #print("arduinoにAを送るよ2021.5.17") 
-                if(currenttime-starttime > 3.0):	#　2秒毎にシリアル通信 走行用の周期は3秒
-                    starttime=currenttime
-                    #print("arduinoまできた2021.5.17")
-                    # 
-                    # while True:
-                    #     ser.write(b'A') # 'A' == 0x41
-                    #     #print("arduinoにAを送りました2021.5.17")   
-                    #     time.sleep(0.1)
-                    #     c = ser.read()
-                    #     if c == b'A':
-                    #         print(c)
-                    #         break
 
-                    # if(limit_d <= 0.1):ser.write(b"s") #　停止
-                    # elif(d <= -0.8):ser.write(b"0")    #　右折 
-                    # elif(-0.8 < d <= -0.6):ser.write(b"1")  #  右折する
-                    # elif(-0.6 < d <= -0.4):ser.write(b"2")  #  右折する
-                    # elif(-0.4 < d <= -0.2):ser.write(b"3")  #  右折する
-                    # elif(-0.2 < d <= -0.1):ser.write(b"4")  #  右折する
-                    # elif(-0.1 < d < 0.1):ser.write(b"5")	#　ハンドル真っ直ぐ
-                    # elif(0.1 <= d < 0.2):ser.write(b"6")    #  左折する
-                    # elif(0.2 <= d < 0.4):ser.write(b"7")    #  左折する
-                    # elif(0.4 <= d < 0.6):ser.write(b"8")    #  左折する
-                    # elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
-                    # elif(0.8 <= d):ser.write(b"a")        #  左折する
+        #print("内側ループ:",j,sep='')
+        j=j+1
+        codelist=get_codelist()
+        Time=round((float(codelist[1])/10000+9),4)	# 日本時間
+        NS=codelist[3]			#  北緯南緯
+        LAT=min_deg(float(codelist[2]))	#　緯度の単位を度に変換
+        EW=codelist[5]			# 東経西経
+        LNG=min_deg(float(codelist[4]))	# 経度の単位を度に変換
+        FF=int(codelist[6])		# fixかfloatか : fixは 4, floatは 5を判断
+        
 
-                    d_cm=d*100 #ずれ量を[m]から[cm]に変換
+        if FF==4:				# fixは 4, floatは 5を判断
 
-                    if d_cm>=127:
-                        d_cm=127
-                    
-                    if d_cm<=-128:
-                        d_cm=-128
+            if limit_d <= 0.3:
+                time.sleep(10)
+                print("ストップ")
+                flag=1
+                break
 
-                    d_int=int(d_cm)
-                    if d_int<0:
-                        d_int=256-abs(d_int)
 
-                    bina_d=bytes([d_int])
+            d=get_d(a,b,c,LAT,LNG,LAT_s,LNG_s)	# 経路からのずれの量[m]を取得
+            edge=get_edge(LAT_s,LNG_s,LAT,LNG)	# 出発地と現在地の距離を取得
+            limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
+            currenttime=time.time()
+            #print("limit_d={0}".format(limit_d))
 
-                    ser.write(bina_d)
-                    time.sleep(0.1)
-                    c = ser.read()
+            #print("arduinoにAを送るよ2021.5.17") 
+            if(currenttime-starttime > 0.5):	#　2秒毎にシリアル通信 走行用の周期は3秒
+                starttime=currenttime
+                #print("arduinoまできた2021.5.17")
+                # 
+                # while True:
+                #     ser.write(b'A') # 'A' == 0x41
+                #     #print("arduinoにAを送りました2021.5.17")   
+                #     time.sleep(0.1)
+                #     c = ser.read()
+                #     if c == b'A':
+                #         print(c)
+                #         break
 
-                    #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
-                    print(LAT,LNG,limit_d,sep=",")
-                    
+                # if(limit_d <= 0.1):ser.write(b"s") #　停止
+                # elif(d <= -0.8):ser.write(b"0")    #　右折 
+                # elif(-0.8 < d <= -0.6):ser.write(b"1")  #  右折する
+                # elif(-0.6 < d <= -0.4):ser.write(b"2")  #  右折する
+                # elif(-0.4 < d <= -0.2):ser.write(b"3")  #  右折する
+                # elif(-0.2 < d <= -0.1):ser.write(b"4")  #  右折する
+                # elif(-0.1 < d < 0.1):ser.write(b"5")	#　ハンドル真っ直ぐ
+                # elif(0.1 <= d < 0.2):ser.write(b"6")    #  左折する
+                # elif(0.2 <= d < 0.4):ser.write(b"7")    #  左折する
+                # elif(0.4 <= d < 0.6):ser.write(b"8")    #  左折する
+                # elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
+                # elif(0.8 <= d):ser.write(b"a")        #  左折する
 
-                    
-            else:
-                print("float")	#　Fix解以外をまとめてFloat解とする
-                continue
+                d_cm=d*100 #ずれ量を[m]から[cm]に変換
 
-            
-            #if( c==b'0' or c==b'1' or c==b'2' or c==b'3' or c==b'4' or c==b'5' or c==b'6' or c==b'7' or c==b'8' or c==b'9' or c==b'a' or c==b's'):
-            
-            #xx.int.from_bytes(c,'big')
-            #print(xx) #表示される値は符号なし 
-            #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+                if d_cm>=127:
+                    d_cm=127
+                
+                if d_cm<=-128:
+                    d_cm=-128
 
+                d_int=int(d_cm)
+                if d_int<0:
+                    d_int=256-abs(d_int)
+
+                bina_d=bytes([d_int])
+
+                ser.write(bina_d)
+                time.sleep(0.1)
+                c = ser.read()
+
+                #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+                print(LAT,LNG,sep=",")
+                LAT_total+=LAT
+                LNG_total+=LNG
+                N=N+1
+
+                
+
+                
+        else:
+            print("float")	#　Fix解以外をまとめてFloat解とする
+            continue
+
+        
+        #if( c==b'0' or c==b'1' or c==b'2' or c==b'3' or c==b'4' or c==b'5' or c==b'6' or c==b'7' or c==b'8' or c==b'9' or c==b'a' or c==b's'):
+        
+        #xx.int.from_bytes(c,'big')
+        #print(xx) #表示される値は符号なし 
+        #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
+    print("データ数:{0},LAT_total:{1},LNG_total={2}".format(N,LAT_total,LNG_total))
+    print("北緯と東経の平均値です！")
+    print(LAT_total/N,LNG_total/N,sep=',')
 
