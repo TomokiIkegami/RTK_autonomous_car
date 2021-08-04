@@ -31,21 +31,47 @@ import re       #北緯と東経を分離するために使用
 # isDestiEast = 142.3521691  # 目的地　東経　ddd.ddddd表記です
 # #############################################################
 
-###### --左折用(カンマ区切り版)-- 出発点と目的地(スタート→中間点)　########################################
-Start = '43.81238459,142.3523173'
-Mid1 = '43.81228830633333,142.35218217533335' 
-Desti='43.8122256998889,142.35217902061112'
+# ###### --左折用(カンマ区切り版)-- 出発点と目的地(スタート→中間点)　########################################
+# Start = '43.81238459,142.3523173'
+# Mid1 = '43.81228830633333,142.35218217533335' 
+# Desti='43.8122256998889,142.35217902061112'
 
-pattern="(.*),(.*)"
-Start_NE=re.search(pattern, Start)
-Mid1_NE=re.search(pattern, Mid1)
-Desti_NE=re.search(pattern, Desti)
+# pattern="(.*),(.*)"
+# Start_NE=re.search(pattern, Start)
+# Mid1_NE=re.search(pattern, Mid1)
+# Desti_NE=re.search(pattern, Desti)
 
-print("スタート{0},{1}".format(Start_NE.group(1),Start_NE.group(2)))
-print("中間点{0},{1}".format(Mid1_NE.group(1),Mid1_NE.group(2)))
-print("ゴール{0},{1}".format(Desti_NE.group(1),Desti_NE.group(2)))
+# print("スタート{0},{1}".format(Start_NE.group(1),Start_NE.group(2)))
+# print("中間点{0},{1}".format(Mid1_NE.group(1),Mid1_NE.group(2)))
+# print("ゴール{0},{1}".format(Desti_NE.group(1),Desti_NE.group(2)))
 
-##############################################################
+# ##############################################################
+
+
+# ###### --左折用(カンマ区切り版)-- 出発点と目的地(スタート→中間点)　########################################
+
+#座標（スタート，中間点1,中間点2...,ゴール）のテキストファイルを開く
+fp = open('左折用の位置座標.txt', 'r', encoding='UTF-8')
+
+#ファイルを文字列として読み込む
+route_txt=fp.read()
+
+#それぞれの行のデータをリストの一要素にする．
+route_data_set=route_txt.splitlines()
+print(route_data_set)
+pattern="(.*),(.*),(.*)"
+
+Point_NUM=len(route_data_set)
+print("経路上の点の個数：{0}個".format(Point_NUM))
+print("")
+
+#ファイルから取得した座標を表示する．
+for i in range(Point_NUM):
+    Point_info=re.search(pattern, route_data_set[i])
+    Label=Point_info.group(1); LAT=Point_info.group(2); LNG=Point_info.group(3)
+    print("{0}: 北緯{1}, 東経{2}".format(Label,LAT,LNG))
+
+print("")
 
 
 def check_fix():    # fixしているか確認
@@ -132,29 +158,41 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
     # LAT_s=isStartNorth; LNG_s=isStartEast # 出発点
     # LAT_f=isDestiNorth; LNG_f=isDestiEast # 目的地
 
-    LAT_s= float(Start_NE.group(1)); LNG_s= float(Start_NE.group(2)) # 出発点
-    LAT_f=float(Mid1_NE.group(1)); LNG_f= float(Mid1_NE.group(2)) # 目的地
+    # LAT_s= float(Start_NE.group(1)); LNG_s= float(Start_NE.group(2)) # 出発点
+    # LAT_f=float(Mid1_NE.group(1)); LNG_f= float(Mid1_NE.group(2)) # 目的地
 
-    course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
-    a=course[0];b=course[1];c=course[2]		# ax+by+c=0
+    # course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
+    # a=course[0];b=course[1];c=course[2]		# ax+by+c=0
 
     time.sleep(35)
     starttime=time.time()
 
     flag=0
-    i=0
-    while True:
-        print("経路の変更回数:",i,sep='')
-        i=i+1
+    #i=0
+    for i in range(Point_NUM-1):
 
-        if flag==1:
-            LAT_s=LAT_f; LNG_s=LNG_f; #中間点をスタートに設定
-            LAT_f=float(Desti_NE.group(1)); LNG_f= float(Desti_NE.group(2)) # ゴールの座標を設定
-            course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
-            a=course[0];b=course[1];c=course[2]		# ax+by+c=0
-            print('中間点とゴールの座標と数式係数を取得しました．')
-            flag=0
-            limit_d=20
+        print("")
+
+        Point_info_s=re.search(pattern, route_data_set[i])
+        Point_info_f=re.search(pattern, route_data_set[i+1])
+        Label_s=Point_info_s.group(1); LAT_s=float(Point_info_s.group(2)); LNG_s=float(Point_info_s.group(3))
+        Label_f=Point_info_f.group(1); LAT_f=float(Point_info_f.group(2)); LNG_f=float(Point_info_f.group(3)) 
+        print("{0}から{1}に向かって走行中".format(Label_s,Label_f))
+        print("{0}: 北緯{1}, 東経{2}".format(Label_s,LAT_s,LNG_s))
+        print("{0}: 北緯{1}, 東経{2}".format(Label_f,LAT_f,LNG_f))
+
+        course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
+        a=course[0];b=course[1];c=course[2]		# ax+by+c=0
+        limit_d=20
+
+        # if flag==1:
+        #     LAT_s=LAT_f; LNG_s=LNG_f; #中間点をスタートに設定
+        #     LAT_f=float(Desti_NE.group(1)); LNG_f= float(Desti_NE.group(2)) # ゴールの座標を設定
+        #     course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
+        #     a=course[0];b=course[1];c=course[2]		# ax+by+c=0
+        #     print('中間点とゴールの座標と数式係数を取得しました．')
+        #     flag=0
+        #     limit_d=20
 
         j=0
         while True:
@@ -172,9 +210,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
             if FF==4:				# fixは 4, floatは 5を判断
 
                 if limit_d <= 0.4:
+                    flag=1
                     time.sleep(10)
                     print("ストップ")
-                    flag=1
                     break
 
 
@@ -211,6 +249,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                     # elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
                     # elif(0.8 <= d):ser.write(b"a")        #  左折する
 
+                    #目的地に到着したときは，ずれ量がないと仮定する
+                    if flag==1:
+                        d=0
+                        print("d={0}に初期化".format(d))
+                        time.sleep(3)
+                        flag=0
+                    
+
                     d_cm=d*100 #ずれ量を[m]から[cm]に変換
 
                     if d_cm>=127:
@@ -222,6 +268,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                     d_int=int(d_cm)
                     if d_int<0:
                         d_int=256-abs(d_int)
+
 
                     bina_d=bytes([d_int])
 
