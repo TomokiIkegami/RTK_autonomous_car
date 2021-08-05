@@ -351,12 +351,7 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
   //k[1] = 0.0;
   k[2] = 0.00;  // ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）の積分のゲイン
 
-  if(delta_m==0){
-    
-      k[0] = 5.0;// 進行方向の角度のゲイン (初めは2.0)
-      k[1] =0;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
-    
-    }
+
  
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y); 
   Sum_y = delta_m + Sum_y;
@@ -364,6 +359,18 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
   
   if(U >= DR) U = DR;
   else if(U <= -DR) U = -DR;
+
+  if(delta_m==0){
+
+        if(delta_rad<0){
+            U=-DR;     
+          }else{
+            U=DR;
+            }
+
+        
+    }
+
 
   /*if(stop_flag==1){
     //Serial.println("Stop!");  // 後輪駆動モータ停止します
@@ -405,6 +412,7 @@ void loop() {
   // 前輪操舵制御 //
   ////////////////////////
   int stop_f = Feed_Back(sita, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
+    
   /*距離を受信したら走行開始*/
   digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,0);
@@ -412,6 +420,7 @@ void loop() {
   /*一定時間走行したら停止*/
   digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,1);
+    
   
   if(stop_f == 1) exit(0);
   delay(300); 

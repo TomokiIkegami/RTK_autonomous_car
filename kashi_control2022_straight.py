@@ -56,6 +56,8 @@ fp = open('左折用の位置座標.txt', 'r', encoding='UTF-8')
 #ファイルを文字列として読み込む
 route_txt=fp.read()
 
+fp.close()
+
 #それぞれの行のデータをリストの一要素にする．
 route_data_set=route_txt.splitlines()
 print(route_data_set)
@@ -164,10 +166,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
     # course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)	# コースの数式係数を取得
     # a=course[0];b=course[1];c=course[2]		# ax+by+c=0
 
-    time.sleep(35)
+    time.sleep(36)
     starttime=time.time()
 
     flag=0
+    flag2=0
     #i=0
     for i in range(Point_NUM-1):
 
@@ -195,8 +198,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
         #     limit_d=20
 
         j=0
+        k=0
         while True:
-            print("内側ループ:",j,sep='')
+            #print("内側ループ:",j,sep='')
             j=j+1
             codelist=get_codelist()
             Time=round((float(codelist[1])/10000+9),4)	# 日本時間
@@ -219,11 +223,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                 d=get_d(a,b,c,LAT,LNG,LAT_s,LNG_s)	# 経路からのずれの量[m]を取得
                 edge=get_edge(LAT_s,LNG_s,LAT,LNG)	# 出発地と現在地の距離を取得
                 limit_d=get_limit_d(LAT,LNG,LAT_f,LNG_f) # 目的地からの距離[m]を取得  
-                currenttime=time.time()
-                print("limit_d={0}".format(limit_d))
 
+
+                currenttime=time.time()
+                #print("limit_d={0}".format(limit_d))
+                
                 #print("arduinoにAを送るよ2021.5.17") 
-                if(currenttime-starttime > 3.0):	#　2秒毎にシリアル通信 走行用の周期は3秒
+                if(currenttime-starttime > 3.5):	#　2秒毎にシリアル通信 走行用の周期は3秒
+                    k=k+1
+
+                    if  flag2==1:
+                        print("d=0による走行を終了しました．")
+                        flag2=0
+
                     starttime=currenttime
                     #print("arduinoまできた2021.5.17")
                     # 
@@ -252,8 +264,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                     #目的地に到着したときは，ずれ量がないと仮定する
                     if flag==1:
                         d=0
-                        print("d={0}に初期化".format(d))
-                        time.sleep(3)
+                        print("d={0}に初期化して走行中(3秒間)".format(d))
+                        flag2=1
+                        #time.sleep(3)
                         flag=0
                     
 
@@ -269,15 +282,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                     if d_int<0:
                         d_int=256-abs(d_int)
 
-
                     bina_d=bytes([d_int])
 
-                    ser.write(bina_d)
+                    print(k,LAT,LNG,limit_d,d,sep=",")
+
+                    ser.write(bina_d) #マイコンに値を書き込むと，車が動き始める
+
+
                     time.sleep(0.1)
-                    c = ser.read()
+                    #c = ser.read()
 
                     #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
-                    print(LAT,LNG,limit_d,sep=",")
+
                     
 
                     
