@@ -1,6 +1,6 @@
 from os import name
 import folium #地図上に座標をプロットできるモジュール
- 
+
 import re #北緯と東経を分離するために使用
 import time     # 時間関数用モジュール
 

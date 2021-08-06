@@ -147,7 +147,7 @@ def get_edge(LAT1,LNG1,LAT2,LNG2):	# ２地点の距離を取得
 limit_d=20			# ずれ量許容範囲[m]
 limit_LL=0.0000004		#　緯度経度許容範囲[deg]
 
-ser = serial.Serial('COM25',115200,timeout = 0.1)	# シリアル通信開始
+ser = serial.Serial('COM25',115200,timeout = 0.1)	# シリアル通信開始 ここにはArduinoのシリアルポート番号を設定する．
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通信開始
     s.connect(('localhost',50000))		# IPf vvvvcaアドレス、ポート番号指定
@@ -260,14 +260,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                     # elif(0.4 <= d < 0.6):ser.write(b"8")    #  左折する
                     # elif(0.6 <= d < 0.8):ser.write(b"9")    #  左折する
                     # elif(0.8 <= d):ser.write(b"a")        #  左折する
-
-                    #目的地に到着したときは，ずれ量がないと仮定する
-                    if flag==1:
-                        d=0
-                        print("d={0}に初期化して走行中(3秒間)".format(d))
-                        flag2=1
-                        #time.sleep(3)
-                        flag=0
                     
 
                     d_cm=d*100 #ずれ量を[m]から[cm]に変換
@@ -275,8 +267,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                     if d_cm>=127:
                         d_cm=127
                     
-                    if d_cm<=-128:
+                    if d_cm<=-127:
+                        d_cm=-127
+
+                    #目的地に到着したときは，ずれ量がないと仮定する
+                    if flag==1:
                         d_cm=-128
+                        print("d={0}に初期化して走行中(3秒間)".format(d))
+                        flag2=1
+                        #time.sleep(3)
+                        flag=0
+
 
                     d_int=int(d_cm)
                     if d_int<0:

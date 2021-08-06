@@ -67,6 +67,9 @@ void compass_Rawdata_Real();
 double getDirection();
 void stopMotor() ;
 
+int flag=0; //曲がり角の検出を保存するグローバル変数
+
+
 // ライブラリが想定している配線が異なるので2番、3番を入れ替える
 Stepper myStepper(MOTOR_STEPS, MOTOR_1, MOTOR_3, MOTOR_2, MOTOR_4);
 
@@ -337,20 +340,45 @@ float k[3];     //フィードバックゲイン
 
 double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
 double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
+
+
+
  
    /////////////////////////////////////////////////////
   // 比例・積分制御                                   //
   // 進行方向の角度と壁からの平均距離の２つの比例制御 //
   ////////////////////////////////////////////////////// 
   // delta_rad = 10*PI/180;
-  double hen_rad = delta_rad/(PI/angle_num)*DR;
+
 
   //k[0] = 1.0;// 進行方向の角度のゲイン
   k[0] = 2.0;// 進行方向の角度のゲイン (初めは2.0)
-  k[1] =100;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
+  k[1] =50.0;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
   //k[1] = 0.0;
   k[2] = 0.00;  // ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）の積分のゲイン
 
+
+  if((int)(delta_m*100)==-128){
+
+      flag=1;
+      k[1]=0; //距離のゲインをゼロにする
+
+  }
+     
+//        if(delta_rad<0){
+//            U=-DR;     
+//          }else{
+//            U=DR;
+//            }
+
+  if (flag==1){
+    
+    delta_rad=delta_rad-PI/4;
+       
+    }
+  
+
+  double hen_rad = delta_rad/(PI/angle_num)*DR;
 
  
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y); 
@@ -359,18 +387,7 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
   
   if(U >= DR) U = DR;
   else if(U <= -DR) U = -DR;
-
-  if(delta_m==0){
-
-        if(delta_rad<0){
-            U=-DR;     
-          }else{
-            U=DR;
-            }
-
-        
-    }
-
+  
 
   /*if(stop_flag==1){
     //Serial.println("Stop!");  // 後輪駆動モータ停止します
@@ -412,8 +429,10 @@ void loop() {
   // 前輪操舵制御 //
   ////////////////////////
   int stop_f = Feed_Back(sita, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
+
+
     
-  /*距離を受信したら走行開始*/
+   /*距離を受信したら走行開始*/
   digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,0);
   delay(1000);
@@ -421,7 +440,7 @@ void loop() {
   digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,1);
     
-  
+     
   if(stop_f == 1) exit(0);
   delay(300); 
 }
