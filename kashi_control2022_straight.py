@@ -147,7 +147,7 @@ def get_edge(LAT1,LNG1,LAT2,LNG2):	# ２地点の距離を取得
 limit_d=20			# ずれ量許容範囲[m]
 limit_LL=0.0000004		#　緯度経度許容範囲[deg]
 
-ser = serial.Serial('COM25',115200,timeout = 0.1)	# シリアル通信開始 ここにはArduinoのシリアルポート番号を設定する．
+ser = serial.Serial('COM6',115200,timeout = 0.1)	# シリアル通信開始 ここにはArduinoのシリアルポート番号を設定する．
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通信開始
     s.connect(('localhost',50000))		# IPf vvvvcaアドレス、ポート番号指定

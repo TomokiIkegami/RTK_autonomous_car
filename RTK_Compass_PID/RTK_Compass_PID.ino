@@ -82,7 +82,7 @@ void enc_RisingPinA()
     ++enc_countA; // ハンドルを上から見て反時計回りで++
 }
 
-int duty_s = 230; // 前輪操舵用モータduty比 (0~255)
+int duty_s = 255; // 前輪操舵用モータduty比 (0~255)
 unsigned long tm0;
 int ii = 0;
 
