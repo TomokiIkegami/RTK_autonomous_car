@@ -215,7 +215,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
 
                 if limit_d <= 0.4:
                     flag=1
-                    time.sleep(10)
+                    #time.sleep(10)
                     print("ストップ")
                     break
 
@@ -229,7 +229,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:	# ソケット通�
                 #print("limit_d={0}".format(limit_d))
                 
                 #print("arduinoにAを送るよ2021.5.17") 
-                if(currenttime-starttime > 3.5):	#　2秒毎にシリアル通信 走行用の周期は3秒
+                if(currenttime-starttime > 2):	#　2秒毎にシリアル通信 走行用の周期は3秒
                     k=k+1
 
                     if  flag2==1:
