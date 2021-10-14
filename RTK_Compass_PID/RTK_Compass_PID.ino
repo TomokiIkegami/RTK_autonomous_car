@@ -192,7 +192,15 @@ void setup() {
   pinMode(RELAY1,OUTPUT);
   pinMode(RELAY2,OUTPUT);  
   digitalWrite(RELAY1,1);// 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2,1);    
+  digitalWrite(RELAY2,1);   
+
+  // 後輪駆動用モータのピン設定 //
+//  pinMode(STEER_IN1_B, OUTPUT);
+//  pinMode(STEER_IN2_B, OUTPUT);
+//  // これでモータが回転する（初めはキャリブレーションをするので停止しておく）
+//  digitalWrite(STEER_IN1_B, 0);
+//  digitalWrite(STEER_IN2_B, 1);  
+   
   // Rotary Encoder Setting //
   pinMode(pinA,INPUT);
   pinMode(pinB,INPUT);  
@@ -352,7 +360,7 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
 
 
   //k[0] = 1.0;// 進行方向の角度のゲイン
-  k[0] = 2.0*0;// 進行方向の角度のゲイン (初めは2.0)
+  k[0] = 2.0;// 進行方向の角度のゲイン (初めは2.0)
   k[1] =50.0;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
   //k[1] = 0.0;
   k[2] = 0.00;  // ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）の積分のゲイン
@@ -435,11 +443,18 @@ void loop() {
    /*距離を受信したら走行開始*/
   digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,0);
-//  delay(1000);
+  // これでモータが回転する（正転/逆転）
+//  digitalWrite(STEER_IN1_B, 1);
+//  digitalWrite(STEER_IN2_B, 0);
+
+  delay(1000);
   /*一定時間走行したら停止*/
-//  digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
-//  digitalWrite(RELAY2,1);
-    
+  digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY2,1);
+
+  // これでモータが回転する（正転/逆転）
+//  digitalWrite(STEER_IN1_B, 0);
+//  digitalWrite(STEER_IN2_B, 0);
      
   if(stop_f == 1) exit(0);
   delay(300); 
