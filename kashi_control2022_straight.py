@@ -285,7 +285,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # ソケット�
                     ser.write(bina_d) #マイコンに値を書き込むと，車が動き始める
 
                     time.sleep(0.1)
-                    #c = ser.read()
+                    c = ser.read() #マイコンから値を読み取ってくる
+                    print(c)
+
 
                     #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
 

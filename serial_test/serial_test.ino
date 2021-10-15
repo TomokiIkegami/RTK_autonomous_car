@@ -12,7 +12,7 @@ void setup() {
 
 void loop() {
 
-//Serial.println("Ikegami");
+//zSerial.println("Ikegami");
 //Serial3.println("Hasebe");
 int delta_l;
   

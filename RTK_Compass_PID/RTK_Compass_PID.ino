@@ -187,6 +187,7 @@ void setup() {
   Serial3.begin(115200);// arduino TeraTermモニタ用
   
   Serial.println("プログラム開始");
+  Serial3.println("プログラム開始");
 
   // RELAY Setting //
   pinMode(RELAY1,OUTPUT);
@@ -360,7 +361,7 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
 
 
   //k[0] = 1.0;// 進行方向の角度のゲイン
-  k[0] = 2.0;// 進行方向の角度のゲイン (初めは2.0)
+  k[0] = 2.0*0;// 進行方向の角度のゲイン (初めは2.0)
   k[1] =50.0;// ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）のゲイン (初めは25.0)
   //k[1] = 0.0;
   k[2] = 0.00;  // ２つの超音波センサの壁からの平均距離（アンテナ位置までの距離）の積分のゲイン
@@ -519,7 +520,8 @@ void Ultrasonic(void){
     if(Serial.available()>0){
       byte cc=(byte)Serial.read();
       delta_l=(char)cc; //経路からのずれ量[cm]
-      //Serial3.println(delta_l);
+      Serial3.println(delta_l);
+      Serial.write(cc);
       break;
       }
     
