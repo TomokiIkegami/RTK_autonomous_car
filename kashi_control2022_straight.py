@@ -286,7 +286,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # ソケット�
 
                     time.sleep(0.1)
                     c = ser.read() #マイコンから値を読み取ってくる
-                    print(c)
+                    print(int(c, 16)) #16進数を10進数に変換
 
 
                     #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
