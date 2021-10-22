@@ -94,54 +94,10 @@ int hensa = 0;
 //ステッピングモータ回転方向 rot_dir=1 は上から見て時計回り
 //ステッピングモータ回転方向 rot_dir=4 は停止
 
-////////////////////////
-// 前輪操舵制御 //
-////////////////////////  
-
-double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
-double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
-  if( (theta/(PI/angle_num)*DR + kdcv*dcv) >= DR ) hang_ang = -DR;
-  else if( (theta/(PI/angle_num)*DR + kdcv*dcv)<= -DR ) hang_ang = DR;
-  else hang_ang = (int)( -theta/(PI/angle_num)*DR - kdcv*dcv);
-
-  if(stop_flag==1){
-    digitalWrite(RELAY1,1);// 0 -> RELAY on , 1 -> RELAY off
-    digitalWrite(RELAY2,1);
-
-    return (1); 
-  }
-
- while(1){
-   if( enc_countA < hang_ang){
-      //Serial.println("CCW"); // 反時計回り
-      analogWrite(STEER_IN1, duty_s);
-      analogWrite(STEER_IN2, duty0);
-      Serial.print("1:enc_count,hang_ang, "); Serial.print(enc_countA);Serial.print(',');Serial.println(hang_ang);
-      //ii = 0;
-    }
-    else if( enc_countA == hang_ang){
-      //Serial.println("Stop!");
-      analogWrite(STEER_IN1, 255);// ブレーキ
-      analogWrite(STEER_IN2, 255);// ブレーキ
-      Serial.print("2:enc_count,hang_ang, "); Serial.print(enc_countA);Serial.print(',');Serial.println(hang_ang);
-      break; 
-    }
-    else if( enc_countA > hang_ang){
-      //Serial.println("CW"); // 時計回り
-      analogWrite(STEER_IN1, duty0);
-      analogWrite(STEER_IN2, duty_s); 
-      Serial.print("3:enc_count,hang_ang, "); Serial.print(enc_countA);Serial.print(',');Serial.println(hang_ang);
-      //ii = 0;
-    } 
-  } 
-  return (0);       
-} */
 
 int dest = 17;//ロータリーエンコーダとギヤ取り付け部がソフトなのでずれるが７にする 8から17.5に変更
 double theta;
 int delta_l;
-
-
 
 
 
@@ -398,9 +354,10 @@ void get_theta_and_d(void){
   while(1){
     if(Serial.available()>0){
       byte cc=(byte)Serial.read();
+      //byte a='a';
       delta_l=(char)cc; //経路からのずれ量[cm]
-      Serial3.println(delta_l);
-      Serial.write(cc);
+      //Serial3.println(delta_l);
+      //Serial.write(a);
       break;
       }
     
