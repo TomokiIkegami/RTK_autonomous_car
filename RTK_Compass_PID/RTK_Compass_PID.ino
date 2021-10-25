@@ -53,7 +53,7 @@ double getDirection();
 void stopMotor() ;
 
 int flag=0; //曲がり角の検出を保存するグローバル変数
-
+int t;
 
 // ライブラリが想定している配線が異なるので2番、3番を入れ替える
 Stepper myStepper(MOTOR_STEPS, MOTOR_1, MOTOR_3, MOTOR_2, MOTOR_4);
@@ -276,29 +276,40 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
 
  
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
+  //Serial3.println(U);
   Sum_y = delta_m + Sum_y;
   
   if(U >= DR) U = DR;
   else if(U <= -DR) U = -DR;
 
+  Serial3.println(t);
+  Serial3.println(U);
+
+  t++;
  
   while(1){
    if( enc_countA < (int)U){
-      //Serial.println("CCW"); // 反時計回り
+          
+      //Serial3.println("CCW"); // 反時計回り
+      
       analogWrite(STEER_IN1, duty_s);
       analogWrite(STEER_IN2, duty0);
       Serial.print("1:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
       //ii = 0;
     }
     else if( enc_countA == (int)U){
-      //Serial.println("Stop!");
+      
+      //Serial3.println("Stop!");
+
       analogWrite(STEER_IN1, 255);// ブレーキ
       analogWrite(STEER_IN2, 255);// ブレーキ
       Serial.print("2:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
       break; 
     }
     else if( enc_countA > (int)U){
-      //Serial.println("CW"); // 時計回り
+      
+      //Serial3.println("CW"); // 時計回り
+      
       analogWrite(STEER_IN1, duty0);
       analogWrite(STEER_IN2, duty_s); 
       Serial.print("3:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
@@ -356,7 +367,8 @@ void get_theta_and_d(void){
       byte cc=(byte)Serial.read();
       //byte a='a';
       delta_l=(char)cc; //経路からのずれ量[cm]
-      //Serial3.println(delta_l);
+      Serial3.println(delta_l);
+      Serial3.println("\n");
       //Serial.write(a);
       break;
       }
