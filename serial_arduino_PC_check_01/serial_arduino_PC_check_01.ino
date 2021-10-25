@@ -30,6 +30,7 @@ void loop() {
       char real_d=(char)cc; //値を符号付きに変換 (-128~127)←計算にはこの値を使用すればよい．
       //if(cc == 'B'){ 
         Serial.write((byte)cc); //値をPCに送信(符号なし0~255)
+        
 //        lcd.setCursor(0,1);
 //        lcd.print("D=");
 //        lcd.setCursor(2,1);
