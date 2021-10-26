@@ -208,7 +208,7 @@ void setup() {
   enc_countA = 35; //14から35に変更
 
   while(1){
-    Serial.println(enc_countA);
+    //Serial.println(enc_countA);
      
     if( enc_countA < dest){
       //Serial.println("CCW"); // 反時計回り
@@ -240,7 +240,7 @@ void setup() {
     }         
   } 
 
-  Serial.println(enc_countA);
+  //Serial.println(enc_countA);
   ii = 0;
 
   //ステッピングモーターを往復回転だけさせる
@@ -346,21 +346,21 @@ double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
       //Serial.println("CCW"); // 反時計回り
       analogWrite(STEER_IN1, duty_s);
       analogWrite(STEER_IN2, duty0);
-      Serial.print("1:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
+      //Serial.print("1:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
       //ii = 0;
     }
     else if( enc_countA == (int)U){
       //Serial.println("Stop!");
       analogWrite(STEER_IN1, 255);// ブレーキ
       analogWrite(STEER_IN2, 255);// ブレーキ
-      Serial.print("2:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
+      //Serial.print("2:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
       break; 
     }
     else if( enc_countA > (int)U){
       //Serial.println("CW"); // 時計回り
       analogWrite(STEER_IN1, duty0);
       analogWrite(STEER_IN2, duty_s); 
-      Serial.print("3:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
+      //Serial.print("3:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
       //ii = 0;
     } 
   } 
@@ -418,6 +418,7 @@ void Ultrasonic(void){
   sita = atan( (Distance_1 - Distance_2) / LL );
   // 基準位置からの距離 [m] 
   delta_l = (Distance_1 + Distance_2)/2.0/100.0 - Distance_c;// [m]にした  
+  Serial.println(delta_l);
 }
 
 // モーターへの電流を止める
