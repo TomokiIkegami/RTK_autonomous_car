@@ -31,6 +31,8 @@
 // Relay pin //
 #define RELAY1 (30)
 #define RELAY2 (31)
+#define RELAY3 (28)
+#define RELAY4 (29)
 
 // センサーの値を保存するグローバル関数
 int   xMag  = 0;
@@ -114,6 +116,12 @@ void setup() {
   pinMode(RELAY2,OUTPUT);  
   digitalWrite(RELAY1,1);// 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,1);    
+
+  pinMode(RELAY3,OUTPUT);
+  pinMode(RELAY4,OUTPUT);  
+  digitalWrite(RELAY3,1);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY4,1);
+
    
   // Rotary Encoder Setting //
   pinMode(pinA,INPUT);
@@ -272,7 +280,7 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
     }
   
 
-  double hen_rad = delta_rad/(PI/angle_num)*DR;
+  double hen_rad = -delta_rad/(PI/angle_num)*DR;
 
  
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
@@ -326,12 +334,14 @@ void loop() {
   ////////////////////////
   // 前輪操舵制御をする //
   ////////////////////////
-  int stop_f = Feed_Back(theta, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
+  int stop_f = Feed_Back(theta, -(double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
 
 
     
    /*距離を受信したら走行開始*/
-  digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY3,0);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY4,0);
+  digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,0);
 
   delay(1000);
@@ -339,6 +349,8 @@ void loop() {
   /*一定時間走行したら停止*/
   digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,1);
+//  digitalWrite(RELAY3,1);// 0 -> RELAY on , 1 -> RELAY off
+//  digitalWrite(RELAY4,1);
 
   if(stop_f == 1) exit(0);
   delay(300); 

@@ -1,42 +1,52 @@
-///////////////////////////////////////////////
-// 超音波センサを、RTK測位と電子コンパスの代わりとして制御プログラムの確認をする
-// 超音波センサは２つです 
+////////////////////////////////////////////
+// コンパスモジュールAE-BMX055 からの磁束密度生データを出力する
+//  AE-BMX055             Arduino MEGA                             //
+//    VCC                    +5V                                  //
+//    GND                    GND                                  //
+//    SDA                    D20(SDA)                              //
+//    SCL                    D21(SCL)                              //
+//   (JP6,JP4,JP5はショートした状態,JP4,JP5はI2Cプルアップ用）                              //
+//
+//　ステッピングモータを正転1回転（反時計回り）、逆転1回転（時計回り）してキャリブレーションもする
+// キャリブレーションデータ取得　ばらつきを見る
+// キャリブレーション後は磁北からのずれ角度をPCに送信する
+// ステッピングモータは回さない
 //   atan(x) 答えの範囲 -pi/2 < atan(x) < pi/2 を使う
 //   duble atan(double x)です　
-///////////////////////////////////////////////
+//*******************************************************
 // モータードライバ TA8428K は前輪操舵のために使う
 // バッテリーは６V使用する
 // 後輪はモータードライバはリレー制御で前進のみ
 // 前輪を左右に往復させロータリーエンコーダで回転角を検出する
 // Rotary Encoder 読み込み：割り込み使用
-// 初めにハンドルを左限界に回して enc_countA = 35　とする
+// 初めにハンドルを左限界に回して enc_countA = 14　とする
 // 反時計回り++   時計回り--
-// 常にハンドル真ん中 enc_countA=17 で停止させる
+// 常にハンドル真ん中 enc_countA=7 で停止させる
+//  2021.3.24
 // *******************************************************/
-
-#include<math.h>
-#include <Wire.h> //I2Cライブラリ
+#include <math.h>
+#include<Wire.h>
 #include <Stepper.h>
 #define MOTOR_1  (32)  // orange
 #define MOTOR_2  (33)  // yellow
 #define MOTOR_3  (34)  // green
 #define MOTOR_4  (35)  // blue
 
-#define Addr_Mag 0x13
-
 #define SW  (36)
 #define MOTOR_STEPS (2048) // 出力軸1回転ステップ数:2048（2相磁励）
      // カタログ値です 1ステップ 0.17578度、10ステップ 1.7578度
-
+// BMX055　磁気センサのI2Cアドレス
+#define Addr_Mag 0x13   // (JP1,JP2,JP3 = Openの時)
 // Relay pin //
 #define RELAY1 (30)
 #define RELAY2 (31)
+#define RELAY3 (28)
+#define RELAY4 (29)
 
 // センサーの値を保存するグローバル関数
 int   xMag  = 0;
 int   yMag  = 0;
 int   zMag  = 0;
-
 
 const int pinA = 19;//ロータリーエンコーダA相 割り込み番号4
 const int pinB = 18;//ロータリーエンコーダB相
@@ -52,9 +62,6 @@ void compass_Rawdata_Real();
 double getDirection();
 void stopMotor() ;
 
-int flag=0; //曲がり角の検出を保存するグローバル変数
-int t;
-
 // ライブラリが想定している配線が異なるので2番、3番を入れ替える
 Stepper myStepper(MOTOR_STEPS, MOTOR_1, MOTOR_3, MOTOR_2, MOTOR_4);
 
@@ -67,7 +74,7 @@ void enc_RisingPinA()
     ++enc_countA; // ハンドルを上から見て反時計回りで++
 }
 
-int duty_s = 255; // 前輪操舵用モータduty比 (0~255)
+int duty_s = 200; // 前輪操舵用モータduty比 (0~255)
 unsigned long tm0;
 int ii = 0;
 
@@ -94,51 +101,93 @@ int hensa = 0;
 //ステッピングモータ回転方向 rot_dir=1 は上から見て時計回り
 //ステッピングモータ回転方向 rot_dir=4 は停止
 
+////////////////////////
+// 前輪操舵制御 //
+////////////////////////  
+void Steering_pid(double sita){
+int ii = 0;
+int hang_ang;
+
+double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
+double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
+
+  if( sita/(PI/angle_num)*DR >= DR ) hang_ang = -DR;
+  else if( sita/(PI/angle_num)*DR<= -DR ) hang_ang = DR;
+  else hang_ang = (int)( -sita/(PI/angle_num)*DR );
+
+
+  while(1){
+   if( enc_countA < hang_ang){
+      //Serial.println("CCW"); // 反時計回り
+      analogWrite(STEER_IN1, duty_s);
+      analogWrite(STEER_IN2, duty0);
+      Serial.print("1:enc_count,hang_ang, "); Serial.print(enc_countA);Serial.print(',');Serial.println(hang_ang);
+      ii = 0;
+    }
+    else if( enc_countA == hang_ang){
+      //Serial.println("Stop!");
+      analogWrite(STEER_IN1, 255);// ブレーキ
+      analogWrite(STEER_IN2, 255);// ブレーキ
+      Serial.print("2:enc_count,hang_ang, "); Serial.print(enc_countA);Serial.print(',');Serial.println(hang_ang);
+//      if(ii == 0){
+//        tm0 = millis();
+//        ii = 1;
+//      }
+//      else {
+//        if((millis() - tm0) > 500){
+//          //enc_countA = 0;
+//          //dest = 0;
+          break; 
+//        }
+//      }
+    }
+    else if( enc_countA > hang_ang){
+      //Serial.println("CW"); // 時計回り
+      analogWrite(STEER_IN1, duty0);
+      analogWrite(STEER_IN2, duty_s); 
+      Serial.print("3:enc_count,hang_ang, "); Serial.print(enc_countA);Serial.print(',');Serial.println(hang_ang);
+      ii = 0;
+    } 
+  }        
+} 
+
 
 int dest = 17;//ロータリーエンコーダとギヤ取り付け部がソフトなのでずれるが７にする 8から17.5に変更
-double theta;
-int delta_l;
-
-
 
 void setup() {
   Serial.begin(115200);// arduino IDEモニタ用
   while (!Serial); 
-  Serial3.begin(115200);// arduino TeraTermモニタ用
-  
-  Serial.println("プログラム開始");
-  Serial3.println("プログラム開始");
 
   // RELAY Setting //
   pinMode(RELAY1,OUTPUT);
   pinMode(RELAY2,OUTPUT);  
   digitalWrite(RELAY1,1);// 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2,1);    
-   
+  digitalWrite(RELAY2,1);
+  
+  pinMode(RELAY3,OUTPUT);
+  pinMode(RELAY4,OUTPUT);  
+  digitalWrite(RELAY3,1);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY4,1);  
+
   // Rotary Encoder Setting //
   pinMode(pinA,INPUT);
   pinMode(pinB,INPUT);  
   attachInterrupt(4, enc_RisingPinA, CHANGE); //両エッジで割り込み発生  
 
-  // 前輪操舵PWM用
-  // Timer2(8bit timer) -> pwm 10, 9
   TCCR2B = (TCCR2B & 0b11111000) | 0x07; //30.64 [Hz]
-  // Timer4(16bit timer) -> pwm 8, 7, 6
   TCCR4B = (TCCR4B & 0b11111000) | 0x05; //30.64 [Hz]
-
+    
   myStepper.setSpeed(5);//5rpm ステッピングモータの回転速度
-  // この回転速度で回り続けるのではなく
-  // stepper.step(steps)で設定したsteps数をこの回転速度で回る
-  // steps=10 ならば１０ステップをこの回転速度で回る
+  // 勘違いしないように！！　この回転速度で回り続けるのではなく
+  // stepper.step(steps)で設定したsteps数をこの回転速度で回るのです
+  // steps=10 ならば１０ステップをこの回転速度で回るのです 
 
-  //Wire(Arduino-I2C)の初期化
+  // Wire(Arduino-I2C)の初期化
   Wire.begin();
-
   //BMX055 初期化
   BMX055_Init();
-  delay(300);
+  delay(300); 
 
-  // 前輪操舵ピン設定
   pinMode(STEER_IN1, OUTPUT);
   pinMode(STEER_IN2, OUTPUT);
   analogWrite(STEER_IN1, 255);
@@ -149,12 +198,13 @@ void setup() {
     Serial.println(enc_countA);
      
     if( enc_countA < dest){
-      // ハンドルを反時計回りに回転
+      //Serial.println("CCW"); // 反時計回り
       analogWrite(STEER_IN1, duty_s);
       analogWrite(STEER_IN2, duty0);
       ii = 0;
     }
     else if( enc_countA == dest){
+      //Serial.println("Stop!");
       analogWrite(STEER_IN1, 255);
       analogWrite(STEER_IN2, 255);
       if(ii == 0){
@@ -170,7 +220,7 @@ void setup() {
       }
     }
     else if( enc_countA > dest){
-      // ハンドルを時計回りに回転
+      //Serial.println("CW"); // 時計回り
       analogWrite(STEER_IN1, duty0);
       analogWrite(STEER_IN2, duty_s); 
       ii = 0;
@@ -180,7 +230,9 @@ void setup() {
   Serial.println(enc_countA);
   ii = 0;
 
-  //ステッピングモーターを往復回転だけさせる
+  //ステッピングモーターを往復回転させ、電子コンパスのキャリブレーションをする
+  //電子コンパスから出力される楕円データの中心点を求める
+  // (0,0) にはならずずれてる
   while(rot_dir != 5){
     if(rot_dir == 0){// rot_dir=0 は上から見て反時計回り
       myStepper.step(User_steps);  // User_stepsだけ回す
@@ -228,126 +280,25 @@ void setup() {
       cal_x_north = cal_x_real -ave_cal_x; 
       cal_y_north = cal_y_real -ave_cal_y; 
       rd_north = getDirection(cal_x_north, cal_y_north);// y軸が角度の基準としている
-     
       // rd_north は台車を置いた位置での磁北の方向
     }
     delay(100);  
-  }  
+  }
+  
+  // 後輪駆動モータ回転　前進します
+
+  digitalWrite(RELAY3,0);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY4,0);
+  digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY2,0);
 
   delay(400);
 }
 
-double U;   //制御量　ロータリエンコーダのパルス数
-double Sum_y = 0.0; //積分要素
-
-
-//フィードバック制御プログラム
-int Feed_Back(double delta_rad, double delta_m){
-  
-// delta_rad [rad]です。  delta_m [m]です。
-float k[3];     //フィードバックゲイン
-
-double angle_num = 6; //この値を12→35→6に変更 ここの数字が大きくなると，蛇行が大きくなる。小さくし過ぎても操舵が出来なくなった。
-double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵したときに出力される、（ロータリーエンコーダの）パルスのカウント数。
-
-
-   /////////////////////////////////////////////////////
-  // 比例・積分制御                                   //
-  // 進行方向の角度とずれ量の２つの比例制御 //
-  ////////////////////////////////////////////////////// 
-
-  k[0] = 2.0;// 進行方向の角度のゲイン (初めは2.0)
-  k[1] =50.0;// ずれ量のゲイン (初めは25.0)
-  k[2] = 0.00;  // ずれ量の積分のゲイン
-
-  if((int)(delta_m*100)==-128){
-
-      flag=1;
-      k[1]=0; //左折時の1回のみ距離のゲインをゼロにする
-
-  }
-     
-  if (flag==1){  
-    delta_rad=delta_rad-PI/4; //左折をするとき、初期方位から45°（π/4）ずれるため
-    }
-  
-
-  double hen_rad = delta_rad/(PI/angle_num)*DR;
-
- 
-  U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
-  //Serial3.println(U);
-  Sum_y = delta_m + Sum_y;
-  
-  if(U >= DR) U = DR;
-  else if(U <= -DR) U = -DR;
-
-  Serial3.println(t);
-  Serial3.println(U);
-
-  t++;
- 
-  while(1){
-   if( enc_countA < (int)U){
-          
-      //Serial3.println("CCW"); // 反時計回り
-      
-      analogWrite(STEER_IN1, duty_s);
-      analogWrite(STEER_IN2, duty0);
-      Serial.print("1:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
-      //ii = 0;
-    }
-    else if( enc_countA == (int)U){
-      
-      //Serial3.println("Stop!");
-
-      analogWrite(STEER_IN1, 255);// ブレーキ
-      analogWrite(STEER_IN2, 255);// ブレーキ
-      Serial.print("2:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
-      break; 
-    }
-    else if( enc_countA > (int)U){
-      
-      //Serial3.println("CW"); // 時計回り
-      
-      analogWrite(STEER_IN1, duty0);
-      analogWrite(STEER_IN2, duty_s); 
-      Serial.print("3:enc_count,U, "); Serial.print(enc_countA);Serial.print(',');Serial.println(U);
-      //ii = 0;
-    } 
-  }
-  return (0);     
-}
+double sita;
 
 void loop() {
-   
-  get_theta_and_d(); //車体角度:theta とずれ量:d を取得する
   
-  ////////////////////////
-  // 前輪操舵制御をする //
-  ////////////////////////
-  int stop_f = Feed_Back(theta, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
-
-
-    
-   /*距離を受信したら走行開始*/
-  digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2,0);
-
-  delay(1000);
-  
-  /*一定時間走行したら停止*/
-  digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2,1);
-
-  if(stop_f == 1) exit(0);
-  delay(300); 
-
-}
-
-void get_theta_and_d(void){
-
-
   ////////////////////////
   // コンパスデータ受信です //
   ////////////////////////  
@@ -355,30 +306,22 @@ void get_theta_and_d(void){
   cal_x_real = cal_x_real -ave_cal_x; 
   cal_y_real = cal_y_real -ave_cal_y;   
   rd = getDirection(cal_x_real, cal_y_real);
-  
-  // atan：－π/2 から π/2
+  // rd は現在の台車位置での磁北の方向
+//  Serial.print(rd);Serial.print(',');Serial.print(rd_north);Serial.print(',');
+//  Serial.print(cal_x_real);Serial.print(',');Serial.println(cal_y_real);
+//  delay(100); 
 
-  theta = rd_north - rd; //角度の値を磁気コンパスのものに置き換え
+  if( sita < -PI ) sita = sita + 2*PI; //atanの計算をするときの値が-π~πなるように
 
-  //PCからずれ量を取得
-  
-  while(1){
-    if(Serial.available()>0){
-      byte cc=(byte)Serial.read();
-      //byte a='a';
-      delta_l=(char)cc; //経路からのずれ量[cm]
-      Serial3.println(delta_l);
-      Serial3.println("\n");
-      //Serial.write(a);
-      break;
-      }
-    
-    }
+  else if( sita > PI ) sita = sita - 2*PI;
 
-}
+  ////////////////////////
+  // 前輪操舵制御 //
+  ////////////////////////  
+  Steering_pid(sita);
+  delay(500);
 
-
-/*磁気コンパス関連の関数*/
+} // end of loop
 
 // コンパスの生データを取得する
 void compass_Rawdata(){
@@ -420,6 +363,13 @@ double getDirection(double x, double y){
   return dir;
 }
 
+// モーターへの電流を止める
+void stopMotor() {
+  digitalWrite(MOTOR_1, LOW);
+  digitalWrite(MOTOR_2, LOW);
+  digitalWrite(MOTOR_3, LOW);
+  digitalWrite(MOTOR_4, LOW);
+}
 
 //=====================================================================================//
 void BMX055_Init()
@@ -495,13 +445,4 @@ void BMX055_Mag()
   {
     zMag -= 32768;
   }
-}
-
-
-// モーターへの電流を止める
-void stopMotor() {
-  digitalWrite(MOTOR_1, LOW);
-  digitalWrite(MOTOR_2, LOW);
-  digitalWrite(MOTOR_3, LOW);
-  digitalWrite(MOTOR_4, LOW);
 }
