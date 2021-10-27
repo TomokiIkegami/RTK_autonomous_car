@@ -296,6 +296,55 @@ void setup() {
     }
     delay(100);  
   }  
+  int ult=0;
+  
+  for(ult=0;ult<10;ult++){
+  // 超音波の出力終了
+  digitalWrite(trig1,LOW);
+  delayMicroseconds(1);
+  // 超音波を出力
+  digitalWrite(trig1,HIGH);
+  delayMicroseconds(11);
+  // 超音波を出力終了
+  digitalWrite(trig1,LOW);
+   // パルスを送信してから受信するまでの時間（マイクロ秒）
+  Duration_1 = pulseIn(echo1,HIGH);
+    
+  // 超音波の出力終了
+  digitalWrite(trig2,LOW);
+  delayMicroseconds(1);
+  // 超音波を出力
+  digitalWrite(trig2,HIGH);
+  delayMicroseconds(11);
+  // 超音波を出力終了
+  digitalWrite(trig2,LOW);
+  // 出力した超音波が返って来る時間を計測
+  Duration_2 = pulseIn(echo2,HIGH);
+
+  if (Duration_1 > 0) {
+    Distance_1 = Duration_1 / 2; // パルスを送信してから戻ってくるまでの時間 ÷ 2 = 対象物までの片道時間
+    // Distance1 単位 cm
+    Distance_1 = Distance_1 * 340.0 * 100.0 / 1000000.0; // ultrasonic speed is 340m/s = 34000cm/s = 0.034cm/us 
+  }
+
+  if (Duration_2 > 0) {
+    Distance_2 = Duration_2 / 2; // パルスを送信してから戻ってくるまでの時間 ÷ 2 = 対象物までの片道時間
+    // Distance2 単位 cm
+    Distance_2 = Distance_2 * 340.0 * 100.0 / 1000000.0; // ultrasonic speed is 340m/s = 34000cm/s = 0.034cm/us 
+  }
+    
+  // double atan(double x) = －π/2 から π/2
+  // 方位 radian
+  sita = atan( (Distance_1 - Distance_2) / LL );
+  // 基準位置からの距離 [m] 
+  delta_l = (Distance_1 + Distance_2)/2.0/100.0 - Distance_c;// [m]にした  
+  Serial.print("prepare:"); Serial.print(ult);Serial.print(','); Serial.print("d:"); Serial.print(delta_l);Serial.print(','); Serial.print("θ:");Serial.println(sita*180/PI);
+  
+  delay(100);
+
+  }
+  
+  
 
   // 後輪駆動モータ回転　前進します
   digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
@@ -367,9 +416,11 @@ double DR=17; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
   return (0);     
 }
 
+
+
 void loop() {
-   
   Ultrasonic();
+  
   ////////////////////////
   // 前輪操舵制御 //
   ////////////////////////  
@@ -418,7 +469,7 @@ void Ultrasonic(void){
   sita = atan( (Distance_1 - Distance_2) / LL );
   // 基準位置からの距離 [m] 
   delta_l = (Distance_1 + Distance_2)/2.0/100.0 - Distance_c;// [m]にした  
-  Serial.println(delta_l);
+  Serial.print("d:"); Serial.print(delta_l);Serial.print(','); Serial.print("θ:");Serial.println(sita*180/PI);
 }
 
 // モーターへの電流を止める
