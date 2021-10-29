@@ -139,6 +139,28 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # ソケット�
 
         course=get_course(LAT_s,LNG_s,LAT_f,LNG_f)  # コースの数式係数を取得
         a=course[0];b=course[1];c=course[2]     # ax+by+c=0
+
+        print("コースの数式係数: {0}x+{1}y+{2}=0".format(a,b,c))
+
+
+        #車体の角度は初めの直線を基準にするので、初めの直線の数式係数a0,b0,c0を保存しておく
+        if i==0:
+            a0=a
+            b0=b
+            c0=c
+
+        #最初の直線と、最後の直線がなす角度を計算（正接関数の加法定理を使用）
+
+        tan_phi0=-a0/b0
+        tan_phi=-a/b
+
+        if i!=0:
+
+            theta_rad=math.atan((tan_phi-tan_phi0)/(1+tan_phi*tan_phi0))
+            theta_deg=theta_rad*180/math.pi
+            print("基準直線との角度差 θ={0}".format(theta_deg))
+
+
         limit_d=20
 
         j=0
@@ -205,8 +227,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # ソケット�
 
                     ser.write(bina_d) #マイコンに値を書き込むと，車が動き始める
 
+                    #曲がり角の時は，ずれ量のあとに角度もマイコンに送る
+                    if d_cm==-128:
+                        theta_int=int(theta_deg)
+                        if theta_int<0:
+                            theta_int=256-abs(theta_int)
+
+                        bina_theta=bytes([theta_int])
+
+                        #print(k,LAT,LNG,limit_d,d,sep=",")
+
+                        ser.write(bina_theta) #ずれ量の次にマイコンがこの値を受け取った時は，マイコンはこの数値を(ずれ量ではなく)角度と判断する．                       
+
+
+
                     time.sleep(0.1)
-                    c = ser.read() #マイコンから値を読み取ってくる
+                    #c = ser.read() #マイコンから値を読み取ってくる
                     #print(int.from_bytes(c, 'big')) #16進数を10進数に変換
                     #print(c)
 
