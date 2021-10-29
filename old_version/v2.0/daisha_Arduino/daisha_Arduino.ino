@@ -1,9 +1,10 @@
-///////////////////////////////////////////////
-// 超音波センサを、RTK測位と電子コンパスの代わりとして制御プログラムの確認をする
-// 超音波センサは２つです 
-//   atan(x) 答えの範囲 -pi/2 < atan(x) < pi/2 を使う
-//   duble atan(double x)です　
-///////////////////////////////////////////////
+/* daisha_Arduino_v2.0 *****************************
+
+・PCと磁気コンパスから、ぞれぞれずれ量と角度を取得する。
+・取得したずれ量と角度を使用して、スタート地点から中間点へ直線走行を行い，中間点からゴール地点は45°曲がった直線経路を設定する．
+                                           
+****************************************************/
+
 // モータードライバ TA8428K は前輪操舵のために使う
 // バッテリーは６V使用する
 // 後輪はモータードライバはリレー制御で前進のみ
@@ -12,8 +13,8 @@
 // 初めにハンドルを左限界に回して enc_countA = 35　とする
 // 反時計回り++   時計回り--
 // 常にハンドル真ん中 enc_countA=17 で停止させる
-// *******************************************************/
 
+// *******************************************************/
 #include<math.h>
 #include <Wire.h> //I2Cライブラリ
 #include <Stepper.h>
@@ -31,8 +32,6 @@
 // Relay pin //
 #define RELAY1 (30)
 #define RELAY2 (31)
-#define RELAY3 (28)
-#define RELAY4 (29)
 
 // センサーの値を保存するグローバル関数
 int   xMag  = 0;
@@ -116,12 +115,6 @@ void setup() {
   pinMode(RELAY2,OUTPUT);  
   digitalWrite(RELAY1,1);// 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,1);    
-
-  pinMode(RELAY3,OUTPUT);
-  pinMode(RELAY4,OUTPUT);  
-  digitalWrite(RELAY3,1);// 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY4,1);
-
    
   // Rotary Encoder Setting //
   pinMode(pinA,INPUT);
@@ -276,11 +269,11 @@ double DR=12; //DR:Dual Rate ，舵角のこと。中心から片側に操舵し
   }
      
   if (flag==1){  
-    delta_rad=delta_rad+PI/4; //左折をするとき、初期方位から45°（π/4）ずれるため．バック走行の時は符号が逆になる．
+    delta_rad=delta_rad-PI/4; //左折をするとき、初期方位から45°（π/4）ずれるため
     }
   
 
-  double hen_rad = -delta_rad/(PI/angle_num)*DR;
+  double hen_rad = delta_rad/(PI/angle_num)*DR;
 
  
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
@@ -334,14 +327,12 @@ void loop() {
   ////////////////////////
   // 前輪操舵制御をする //
   ////////////////////////
-  int stop_f = Feed_Back(theta, -(double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
+  int stop_f = Feed_Back(theta, (double)delta_l/100); //delta_l/100 → 単位を[cm]から[m]にするため．
 
 
     
    /*距離を受信したら走行開始*/
-  digitalWrite(RELAY3,0);// 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY4,0);
-  digitalWrite(RELAY1,0);// 0 -> RELAY on , 1 -> RELAY off
+  digitalWrite(RELAY1,0); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,0);
 
   delay(1000);
@@ -349,8 +340,6 @@ void loop() {
   /*一定時間走行したら停止*/
   digitalWrite(RELAY1,1); // 0 -> RELAY on , 1 -> RELAY off
   digitalWrite(RELAY2,1);
-//  digitalWrite(RELAY3,1);// 0 -> RELAY on , 1 -> RELAY off
-//  digitalWrite(RELAY4,1);
 
   if(stop_f == 1) exit(0);
   delay(300); 
