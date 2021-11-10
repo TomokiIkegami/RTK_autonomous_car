@@ -269,8 +269,10 @@ int Feed_Back(double delta_rad, double delta_m) {
 
     flag = 1; //経路が変更されたことをマイコンに教える
     this_is_theta = 1; //次に送られてくる値が，角度であることをマイコンに知らせる．
-    k[1] = 0; //左折時の1回のみ距離のゲインをゼロにする
-
+    //k[1] = 0; //左折時の1回のみ距離のゲインをゼロにする
+    Serial3.println("ずれ量のゲインが0");
+    Serial3.println("このあと，ハンドルを切る処理を飛ばします．(A点)");
+    goto label_goto;
   }
 
   /*送られてくる数値を角度として認識する処理*/
@@ -278,16 +280,19 @@ int Feed_Back(double delta_rad, double delta_m) {
     theta_next = (int)(delta_m * 100); //角度の値を保存する
     Serial3.println("this is theta");
     Serial3.println(delta_m); //ここで表示される値は，ずれ量ではなく角度である．
+    k[1] = 0; //左折時の1回のみ距離のゲインをゼロにする
+    
     flag2 = 0; //ずれ量を角度とする処理を終えたことを知らせる変数
     flag3 = 1; //これ以降の処理（フィードバックゲインの計算，ハンドルの操舵処理）をスキップする．
   }
 
-  if(flag3!=1){
+  //if(flag3!=1){
 
   /*角度を初期方位から補正する処理*/
   if (flag == 1 && this_is_theta == 0) {
     delta_rad = delta_rad - theta_next * (PI / 180); //左折をするとき、初期方位からtheta_nextだけずれる．
-    Serial3.println("using a new theta");
+    Serial3.print("new theta = "); Serial3.print(theta_next); Serial3.print("\n");
+    
 
   }
 
@@ -297,15 +302,18 @@ int Feed_Back(double delta_rad, double delta_m) {
   Serial3.println(delta_m); //ここで表示する値はずれ量である．
 
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
-  //Serial3.println(U);
+  Serial3.print("U_before = "); Serial3.println(U);
   Sum_y = delta_m + Sum_y;
 
   if (U >= DR) U = DR;
   else if (U <= -DR) U = -DR;
 
+  Serial3.print("U_after = "); Serial3.println(U);
+  
   //  Serial3.println(t);
   //  Serial3.println(U);
 
+  
   t++;
 
   while (1) {
@@ -339,9 +347,11 @@ int Feed_Back(double delta_rad, double delta_m) {
   }
 
   
-  }
+  //}
 
   flag3=0; //角度の変更処理を終えたので，この値をゼロにする．
+  label_goto:
+  Serial3.println("ここが関数の最後(B点)");
   return (0);
 }
 
