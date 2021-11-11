@@ -154,7 +154,9 @@ int dest = 17;//ロータリーエンコーダとギヤ取り付け部がソフ�
 
 void setup() {
   Serial.begin(115200);// arduino IDEモニタ用
-  while (!Serial); 
+  while (!Serial); //シリアル通信ポートが正常に接続されるまで抜け出さない．
+  Serial3.begin(115200);// arduino TeraTermモニタ用
+  while (!Serial3); //シリアル通信ポートが正常に接続されるまで抜け出さない． 
 
   // RELAY Setting //
   pinMode(RELAY1,OUTPUT);
@@ -262,17 +264,18 @@ void setup() {
       stopMotor(); 
       delay(500);
       rot_dir = 5;
-      Serial.println("平均値");  
+      Serial3.println("平均値");  
       ave_cal_x = cal_x/count;//楕円中心のｘ座標 
-      Serial.println(ave_cal_x);
+      Serial3.println(ave_cal_x);
       ave_cal_y = cal_y/count;//楕円中心のｙ座標
-      Serial.println(ave_cal_y);
+      Serial3.println(ave_cal_y);
  
       compass_Rawdata_Real();
       cal_x_north = cal_x_real -ave_cal_x; 
       cal_y_north = cal_y_real -ave_cal_y; 
       rd_north = getDirection(cal_x_north, cal_y_north);// y軸が角度の基準としている
       // rd_north は台車を置いた位置での磁北の方向
+      Serial3.println(rd_north);
     }
     delay(100);  
   }
@@ -297,11 +300,14 @@ void loop() {
   cal_y_real = cal_y_real -ave_cal_y;   
   rd = getDirection(cal_x_real, cal_y_real);
   // rd は現在の台車位置での磁北の方向
-//  Serial.print(rd);Serial.print(',');Serial.print(rd_north);Serial.print(',');
-//  Serial.print(cal_x_real);Serial.print(',');Serial.println(cal_y_real);
-//  delay(100); 
+  Serial3.print(rd);Serial3.print(',');Serial3.print(rd_north);Serial3.print(',');
+  Serial3.print(cal_x_real);Serial3.print(',');Serial3.println(cal_y_real);
+  delay(100); 
 
   sita = rd_north - rd;
+  Serial3.print("θ = "); Serial3.println(sita*180/PI); 
+  Serial3.print("rd_north = "); Serial3.println(rd_north*180/PI);
+  Serial3.print("rd = "); Serial3.println(rd*180/PI);  
 
   if( sita < -PI ) sita = sita + 2*PI; //atanの計算をするときの値が-π~πなるように
 
@@ -319,18 +325,18 @@ void loop() {
 void compass_Rawdata(){
   //BMX055 磁気の読み取り
   BMX055_Mag();
-  Serial.print("xMag,yMag,zMag,rot_dir,count :  ");
-  Serial.print(xMag); cal_x += (double)xMag;
-  Serial.print(",");
-  Serial.print(yMag); cal_y += (double)yMag;
-  Serial.print(",");
-  Serial.print(zMag);
-  Serial.print(","); 
-  Serial.print(rot_dir);
-  Serial.print(","); 
-  Serial.print(count);
-  Serial.print(","); 
-  Serial.println();
+  Serial3.print("xMag,yMag,zMag,rot_dir,count :  ");
+  Serial3.print(xMag); cal_x += (double)xMag;
+  Serial3.print(",");
+  Serial3.print(yMag); cal_y += (double)yMag;
+  Serial3.print(",");
+  Serial3.print(zMag);
+  Serial3.print(","); 
+  Serial3.print(rot_dir);
+  Serial3.print(","); 
+  Serial3.print(count);
+  Serial3.print(","); 
+  Serial3.println();
 }
 
 void compass_Rawdata_Real(){
