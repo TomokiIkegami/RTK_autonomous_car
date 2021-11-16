@@ -34,9 +34,9 @@
 #define RELAY2 (31)
 
 // センサーの値を保存するグローバル関数
-int   xMag  = 0;
-int   yMag  = 0;
-int   zMag  = 0;
+int   xMag  = 1;
+int   yMag  = 1;
+int   zMag  = 1;
 
 
 const int pinA = 19;//ロータリーエンコーダA相 割り込み番号4
@@ -397,18 +397,24 @@ void get_theta_and_d(void) {
 void compass_Rawdata() {
   //BMX055 磁気の読み取り
   BMX055_Mag();
-  Serial.print("xMag,yMag,zMag,rot_dir,count :  ");
-  Serial.print(xMag); cal_x += (double)xMag;
-  Serial.print(",");
-  Serial.print(yMag); cal_y += (double)yMag;
-  Serial.print(",");
-  Serial.print(zMag);
-  Serial.print(",");
-  Serial.print(rot_dir);
-  Serial.print(",");
-  Serial.print(count);
-  Serial.print(",");
-  Serial.println();
+  Serial3.print("xMag,yMag,zMag,rot_dir,count :  ");
+  Serial3.print(xMag); cal_x += (double)xMag;
+  Serial3.print(",");
+  Serial3.print(yMag); cal_y += (double)yMag;
+  Serial3.print(",");
+  Serial3.print(zMag);
+  Serial3.print(",");
+  Serial3.print(rot_dir);
+  Serial3.print(",");
+  Serial3.print(count);
+  Serial3.print(",");
+  Serial3.println();
+  if (xMag==0&&yMag==0&&zMag==0){
+    Serial3.print("compass value error!");
+    xMag=yMag=zMag=1;
+    delay(100);
+    exit(0);
+    }
 }
 
 void compass_Rawdata_Real() {
@@ -416,6 +422,12 @@ void compass_Rawdata_Real() {
   BMX055_Mag();
   cal_x_real = (double)xMag;
   cal_y_real = (double)yMag;
+  if (xMag==0&&yMag==0){
+    Serial3.print("compass value error!");
+    xMag=yMag=zMag=1;
+    delay(100);
+    exit(0);
+    }
 }
 
 //** 角度を求める 出力は Radian **//
