@@ -33,9 +33,9 @@
 #define RELAY2 (31)
 
 // センサーの値を保存するグローバル関数
-int   xMag  = 0;
-int   yMag  = 0;
-int   zMag  = 0;
+int   xMag  = 1;
+int   yMag  = 1;
+int   zMag  = 1;
 
 
 const int pinA = 19;//ロータリーエンコーダA相 割り込み番号4
@@ -302,13 +302,17 @@ int Feed_Back(double delta_rad, double delta_m) {
   Serial3.println(delta_m); //ここで表示する値はずれ量である．
 
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
-  Serial3.print("U_before = "); Serial3.println(U);
+  //Serial3.print("U_before = "); Serial3.println(U);
   Sum_y = delta_m + Sum_y;
+  Serial3.print("d = "); Serial3.println(delta_m);  
+  Serial3.print("θ = "); Serial3.println(delta_rad * 180 / PI);  
+  Serial3.print("U = "); Serial3.println(U);
+  Serial3.print("\n");
 
   if (U >= DR) U = DR;
   else if (U <= -DR) U = -DR;
 
-  Serial3.print("U_after = "); Serial3.println(U);
+  //Serial3.print("U_after = "); Serial3.println(U);
   
   //  Serial3.println(t);
   //  Serial3.println(U);
@@ -351,7 +355,7 @@ int Feed_Back(double delta_rad, double delta_m) {
 
   flag3=0; //角度の変更処理を終えたので，この値をゼロにする．
   label_goto:
-  Serial3.println("ここが関数の最後(B点)");
+  //Serial3.println("ここが関数の最後(B点)");
   return (0);
 }
 
@@ -439,6 +443,13 @@ void compass_Rawdata() {
   Serial.print(count);
   Serial.print(",");
   Serial.println();
+  if (xMag==0&&yMag==0&&zMag==0){
+    Serial3.print("compass value error!");
+    xMag=yMag=zMag=1;
+    delay(100);
+    exit(0);
+    }
+  
 }
 
 void compass_Rawdata_Real() {
@@ -446,6 +457,12 @@ void compass_Rawdata_Real() {
   BMX055_Mag();
   cal_x_real = (double)xMag;
   cal_y_real = (double)yMag;
+  if (xMag==0&&yMag==0){
+    Serial3.print("compass value error!");
+    xMag=yMag=zMag=1;
+    delay(100);
+    exit(0);
+    }
 }
 
 //** 角度を求める 出力は Radian **//
