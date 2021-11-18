@@ -55,6 +55,8 @@ void stopMotor() ;
 int flag = 0; //曲がり角の検出を保存するグローバル変数
 int flag2 = 0; //ずれ量を角度とする処理を終えたことを知らせる変数
 int flag3 = 0; //ハンドルを切る処理をスキップするための変数
+int mag_error = 0; //コンパスの値が変なときは，この値を1にする．
+
 int this_is_theta = 0; //送られてくる値が，ずれ量ではなく角度であることをマイコンに知らせる変数
 int theta_next = 0; //初期方位からの角度差
 int t;
@@ -185,7 +187,8 @@ void setup() {
   ii = 0;
 
   //ステッピングモーターを往復回転だけさせる
-  while (rot_dir != 5) {
+
+  while ((rot_dir != 5) && (mag_error!=1)) {
     if (rot_dir == 0) { // rot_dir=0 は上から見て反時計回り
       myStepper.step(User_steps);  // User_stepsだけ回す
       v_angle = v_angle + 10.0;
@@ -239,6 +242,9 @@ void setup() {
   }
 
   delay(400);
+  
+
+
 }
 
 double U;   //制御量　ロータリエンコーダのパルス数
@@ -360,7 +366,7 @@ int Feed_Back(double delta_rad, double delta_m) {
 }
 
 void loop() {
-
+if(mag_error!=1){
   get_theta_and_d(); //車体角度:theta とずれ量:d を取得する
 
   ////////////////////////
@@ -388,6 +394,11 @@ void loop() {
 
   if (stop_f == 1) exit(0);
   delay(300);
+}else{
+  Serial3.print("loop関数を抜けます！");
+  delay(100);
+  exit(0);
+  }
 
 }
 
@@ -431,23 +442,24 @@ void get_theta_and_d(void) {
 void compass_Rawdata() {
   //BMX055 磁気の読み取り
   BMX055_Mag();
-  Serial.print("xMag,yMag,zMag,rot_dir,count :  ");
-  Serial.print(xMag); cal_x += (double)xMag;
-  Serial.print(",");
-  Serial.print(yMag); cal_y += (double)yMag;
-  Serial.print(",");
-  Serial.print(zMag);
-  Serial.print(",");
-  Serial.print(rot_dir);
-  Serial.print(",");
-  Serial.print(count);
-  Serial.print(",");
-  Serial.println();
+  Serial3.print("xMag,yMag,zMag,rot_dir,count :  ");
+  Serial3.print(xMag); cal_x += (double)xMag;
+  Serial3.print(",");
+  Serial3.print(yMag); cal_y += (double)yMag;
+  Serial3.print(",");
+  Serial3.print(zMag);
+  Serial3.print(",");
+  Serial3.print(rot_dir);
+  Serial3.print(",");
+  Serial3.print(count);
+  Serial3.print(",");
+  Serial3.println();
   if (xMag==0&&yMag==0&&zMag==0){
-    Serial3.print("compass value error!");
-    xMag=yMag=zMag=1;
+    Serial3.print("compass value error!\n");
+    //xMag=yMag=zMag=1;
     delay(100);
-    exit(0);
+    mag_error=1; //エラー検出
+    //exit(0);
     }
   
 }
@@ -458,10 +470,11 @@ void compass_Rawdata_Real() {
   cal_x_real = (double)xMag;
   cal_y_real = (double)yMag;
   if (xMag==0&&yMag==0){
-    Serial3.print("compass value error!");
-    xMag=yMag=zMag=1;
+    Serial3.print("compass value error!\n");
+    //xMag=yMag=zMag=1;
     delay(100);
-    exit(0);
+    mag_error=1; //エラー検出
+    //exit(0);
     }
 }
 

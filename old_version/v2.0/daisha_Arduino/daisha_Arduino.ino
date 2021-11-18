@@ -272,7 +272,7 @@ int Feed_Back(double delta_rad, double delta_m) {
   delta_rad_2=delta_rad;
   
     if (flag==1){
-      delta_rad_2=delta_rad-PI/4; //左折をするとき、初期方位から45°（π/4）ずれるため
+      delta_rad_2=delta_rad-45*(PI/180); //左折をするとき、初期方位から45°（π/4）ずれるため
       Serial3.print("flag = "); Serial3.println(flag);
       }
 
