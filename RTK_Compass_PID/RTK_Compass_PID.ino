@@ -33,9 +33,9 @@
 #define RELAY2 (31)
 
 // センサーの値を保存するグローバル関数
-int   xMag  = 1;
-int   yMag  = 1;
-int   zMag  = 1;
+int   xMag;
+int   yMag;
+int   zMag;
 
 
 const int pinA = 19;//ロータリーエンコーダA相 割り込み番号4
@@ -114,6 +114,7 @@ void setup() {
 
   Serial.println("プログラム開始");
   Serial3.println("プログラム開始");
+  xMag=yMag=zMag=1; //コンパスの値を初期化
 
   // RELAY Setting //
   pinMode(RELAY1, OUTPUT);
@@ -139,6 +140,8 @@ void setup() {
 
   //Wire(Arduino-I2C)の初期化
   Wire.begin();
+  pinMode(A4,INPUT); //内部プルアップを無効にする．
+  pinMode(A5,INPUT); //内部プルアップを無効にする．
 
   //BMX055 初期化
   BMX055_Init();
