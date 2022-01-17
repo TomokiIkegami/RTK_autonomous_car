@@ -295,11 +295,6 @@ int Feed_Back(double delta_rad, double delta_m) {
   if (U >= DR) U = DR;
   else if (U <= -DR) U = -DR;
 
-  //Serial3.println(t);
-
-
-  //t++;
-
   while (1) {
     if ( enc_countA < (int)U) {
 
@@ -379,11 +374,7 @@ void get_theta_and_d(void) {
   while (1) {
     if (Serial.available() > 0) {
       byte cc = (byte)Serial.read();
-      //byte a='a';
       delta_l = (char)cc; //経路からのずれ量[cm]
-      //Serial3.println(delta_l);
-      //Serial3.println("\n");
-      //Serial.write(a);
       break;
     }
 

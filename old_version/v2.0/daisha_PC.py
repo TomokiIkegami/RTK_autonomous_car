@@ -210,24 +210,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # ソケット�
 
                     time.sleep(0.1)
                     c = ser.read() #マイコンから値を読み取ってくる
-                    #print(int.from_bytes(c, 'big')) #16進数を10進数に変換
-                    #print(c)
 
-                    #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
-
-                    
 
                     
             else:
                 print("float")  #　Fix解以外をまとめてFloat解とする
                 continue
-
-            
-            #if( c==b'0' or c==b'1' or c==b'2' or c==b'3' or c==b'4' or c==b'5' or c==b'6' or c==b'7' or c==b'8' or c==b'9' or c==b'a' or c==b's'):
-            
-            #xx.int.from_bytes(c,'big')
-            #print(xx) #表示される値は符号なし 
-            #print("fix,",Time,",",NS,LAT,"[deg],",EW,LNG,"[deg],d=",round(d,4),"[m]") # 緯度経度出力
-
-
-
