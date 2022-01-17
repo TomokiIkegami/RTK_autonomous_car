@@ -33,9 +33,9 @@
 #define RELAY2 (31)
 
 // センサーの値を保存するグローバル関数
-int   xMag  = 0;
-int   yMag  = 0;
-int   zMag  = 0;
+int   xMag;
+int   yMag;
+int   zMag;
 
 
 const int pinA = 19;//ロータリーエンコーダA相 割り込み番号4
@@ -54,8 +54,11 @@ void stopMotor() ;
 
 int flag = 0; //曲がり角の検出を保存するグローバル変数
 int flag2 = 0; //ずれ量を角度とする処理を終えたことを知らせる変数
+int flag3 = 0; //ハンドルを切る処理をスキップするための変数
+int mag_error = 0; //コンパスの値が変なときは，この値を1にする．
+
 int this_is_theta = 0; //送られてくる値が，ずれ量ではなく角度であることをマイコンに知らせる変数
-int theta_next=0; //初期方位からの角度差
+int theta_next = 0; //初期方位からの角度差
 int t;
 
 // ライブラリが想定している配線が異なるので2番、3番を入れ替える
@@ -111,6 +114,7 @@ void setup() {
 
   Serial.println("プログラム開始");
   Serial3.println("プログラム開始");
+  xMag=yMag=zMag=1; //コンパスの値を初期化
 
   // RELAY Setting //
   pinMode(RELAY1, OUTPUT);
@@ -136,6 +140,8 @@ void setup() {
 
   //Wire(Arduino-I2C)の初期化
   Wire.begin();
+  pinMode(A4,INPUT); //内部プルアップを無効にする．
+  pinMode(A5,INPUT); //内部プルアップを無効にする．
 
   //BMX055 初期化
   BMX055_Init();
@@ -184,7 +190,8 @@ void setup() {
   ii = 0;
 
   //ステッピングモーターを往復回転だけさせる
-  while (rot_dir != 5) {
+
+  while ((rot_dir != 5) && (mag_error!=1)) {
     if (rot_dir == 0) { // rot_dir=0 は上から見て反時計回り
       myStepper.step(User_steps);  // User_stepsだけ回す
       v_angle = v_angle + 10.0;
@@ -238,6 +245,9 @@ void setup() {
   }
 
   delay(400);
+  
+
+
 }
 
 double U;   //制御量　ロータリエンコーダのパルス数
@@ -267,22 +277,31 @@ int Feed_Back(double delta_rad, double delta_m) {
   if ((int)(delta_m * 100) == -128) {
 
     flag = 1; //経路が変更されたことをマイコンに教える
-    this_is_theta=1; //次に送られてくる値が，角度であることをマイコンに知らせる．
-    k[1] = 0; //左折時の1回のみ距離のゲインをゼロにする
-
+    this_is_theta = 1; //次に送られてくる値が，角度であることをマイコンに知らせる．
+    //k[1] = 0; //左折時の1回のみ距離のゲインをゼロにする
+    Serial3.println("ずれ量のゲインが0");
+    Serial3.println("このあと，ハンドルを切る処理を飛ばします．(A点)");
+    goto label_goto;
   }
 
   /*送られてくる数値を角度として認識する処理*/
- if (this_is_theta==0&&flag2==1){
-  theta_next=(int)(delta_m * 100); //角度の値を保存する
-  Serial3.println("this is theta");
-  Serial3.println(delta_m); //ここで表示される値は，ずれ量ではなく角度である．
-  flag2=0;
+  if (this_is_theta == 0 && flag2 == 1) {
+    theta_next = (int)(delta_m * 100); //角度の値を保存する
+    Serial3.println("this is theta");
+    Serial3.println(delta_m); //ここで表示される値は，ずれ量ではなく角度である．
+    k[1] = 0; //左折時の1回のみ距離のゲインをゼロにする
+    
+    flag2 = 0; //ずれ量を角度とする処理を終えたことを知らせる変数
+    flag3 = 1; //これ以降の処理（フィードバックゲインの計算，ハンドルの操舵処理）をスキップする．
   }
-  
+
+  //if(flag3!=1){
+
   /*角度を初期方位から補正する処理*/
-  if (flag == 1&&this_is_theta==0) {
-    delta_rad = delta_rad - theta_next*(PI / 180); //左折をするとき、初期方位からtheta_nextだけずれる．
+  if (flag == 1 && this_is_theta == 0) {
+    delta_rad = delta_rad - theta_next * (PI / 180); //左折をするとき、初期方位からtheta_nextだけずれる．
+    Serial3.print("new theta = "); Serial3.print(theta_next); Serial3.print("\n");
+    
 
   }
 
@@ -292,15 +311,22 @@ int Feed_Back(double delta_rad, double delta_m) {
   Serial3.println(delta_m); //ここで表示する値はずれ量である．
 
   U =  (-k[0] * hen_rad  + k[1] * delta_m + k[2] * Sum_y);  //制御量の計算
-  //Serial3.println(U);
+  //Serial3.print("U_before = "); Serial3.println(U);
   Sum_y = delta_m + Sum_y;
+  Serial3.print("d = "); Serial3.println(delta_m);  
+  Serial3.print("θ = "); Serial3.println(delta_rad * 180 / PI);  
+  Serial3.print("U = "); Serial3.println(U);
+  Serial3.print("\n");
 
   if (U >= DR) U = DR;
   else if (U <= -DR) U = -DR;
 
-//  Serial3.println(t);
-//  Serial3.println(U);
+  //Serial3.print("U_after = "); Serial3.println(U);
+  
+  //  Serial3.println(t);
+  //  Serial3.println(U);
 
+  
   t++;
 
   while (1) {
@@ -332,11 +358,18 @@ int Feed_Back(double delta_rad, double delta_m) {
       //ii = 0;
     }
   }
+
+  
+  //}
+
+  flag3=0; //角度の変更処理を終えたので，この値をゼロにする．
+  label_goto:
+  //Serial3.println("ここが関数の最後(B点)");
   return (0);
 }
 
 void loop() {
-
+if(mag_error!=1){
   get_theta_and_d(); //車体角度:theta とずれ量:d を取得する
 
   ////////////////////////
@@ -345,24 +378,30 @@ void loop() {
   int stop_f = Feed_Back(theta, (double)delta_l / 100); //delta_l/100 → 単位を[cm]から[m]にするため．
 
 
-  if(this_is_theta==1&&flag2==0){
-     this_is_theta=0; //角度を受け取った時は，処理をスキップする．
-     flag2=1; //ずれ量を角度とする処理を終えたとき，1を立てる.
-  }else{
-  
-  /*距離を受信したら走行開始*/
-  digitalWrite(RELAY1, 0); // 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2, 0);
+  if (this_is_theta == 1 && flag2 == 0) {
+    this_is_theta = 0; //角度を受け取った時は，処理をスキップする．
+    Serial3.println("走るのをスキップ！");
+    flag2 = 1; //ずれ量を角度とする処理を終えたとき，1を立てる.
+  } else {
 
-  delay(1000);
+    /*距離を受信したら走行開始*/
+    digitalWrite(RELAY1, 0); // 0 -> RELAY on , 1 -> RELAY off
+    digitalWrite(RELAY2, 0);
 
-  /*一定時間走行したら停止*/
-  digitalWrite(RELAY1, 1); // 0 -> RELAY on , 1 -> RELAY off
-  digitalWrite(RELAY2, 1);
+    delay(1000);
+
+    /*一定時間走行したら停止*/
+    digitalWrite(RELAY1, 1); // 0 -> RELAY on , 1 -> RELAY off
+    digitalWrite(RELAY2, 1);
   }
-  
+
   if (stop_f == 1) exit(0);
   delay(300);
+}else{
+  Serial3.print("loop関数を抜けます！");
+  delay(100);
+  exit(0);
+  }
 
 }
 
@@ -380,7 +419,7 @@ void get_theta_and_d(void) {
   // atan：－π/2 から π/2
 
   theta = rd_north - rd; //角度の値を磁気コンパスのものに置き換え
-  
+
 
   //PCからずれ量を取得
 
@@ -389,8 +428,8 @@ void get_theta_and_d(void) {
       byte cc = (byte)Serial.read();
       //byte a='a';
       delta_l = (char)cc; //経路からのずれ量[cm]
-//      Serial3.println(delta_l);
-//      Serial3.println("\n");
+      //      Serial3.println(delta_l);
+      //      Serial3.println("\n");
       //Serial.write(a);
       break;
     }
@@ -406,18 +445,26 @@ void get_theta_and_d(void) {
 void compass_Rawdata() {
   //BMX055 磁気の読み取り
   BMX055_Mag();
-  Serial.print("xMag,yMag,zMag,rot_dir,count :  ");
-  Serial.print(xMag); cal_x += (double)xMag;
-  Serial.print(",");
-  Serial.print(yMag); cal_y += (double)yMag;
-  Serial.print(",");
-  Serial.print(zMag);
-  Serial.print(",");
-  Serial.print(rot_dir);
-  Serial.print(",");
-  Serial.print(count);
-  Serial.print(",");
-  Serial.println();
+  Serial3.print("xMag,yMag,zMag,rot_dir,count :  ");
+  Serial3.print(xMag); cal_x += (double)xMag;
+  Serial3.print(",");
+  Serial3.print(yMag); cal_y += (double)yMag;
+  Serial3.print(",");
+  Serial3.print(zMag);
+  Serial3.print(",");
+  Serial3.print(rot_dir);
+  Serial3.print(",");
+  Serial3.print(count);
+  Serial3.print(",");
+  Serial3.println();
+  if (xMag==0&&yMag==0&&zMag==0){
+    Serial3.print("compass value error!\n");
+    //xMag=yMag=zMag=1;
+    delay(100);
+    mag_error=1; //エラー検出
+    //exit(0);
+    }
+  
 }
 
 void compass_Rawdata_Real() {
@@ -425,6 +472,13 @@ void compass_Rawdata_Real() {
   BMX055_Mag();
   cal_x_real = (double)xMag;
   cal_y_real = (double)yMag;
+  if (xMag==0&&yMag==0){
+    Serial3.print("compass value error!\n");
+    //xMag=yMag=zMag=1;
+    delay(100);
+    mag_error=1; //エラー検出
+    //exit(0);
+    }
 }
 
 //** 角度を求める 出力は Radian **//
