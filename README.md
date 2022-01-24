@@ -16,7 +16,6 @@ RTK台車のセットアップ方法や動かし方については、以下の�
 2. [走行のプログラム導入手順など](http://onshape.thick.jp/onshape/108/)
 
 # Author
-作成情報を列挙する
 * Tomoki Ikegami
 * Wataru Hasebe
 National Institute of Technology, Asahikawa Collage
